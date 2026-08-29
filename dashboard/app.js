@@ -1,6 +1,7 @@
 /**
  * ModelShield Developer Dashboard Application Logic (Phase 3 Refinement)
- * Theme switching (Dark/Light), Remix Icons, Dual Split Terminal, Zero Emojis
+ * VS Code / GitHub Actions style workbench with Theme Switcher, Remix Icons,
+ * Secondary Config Toolbar, Split Terminal Dock, and Unified Mock State.
  */
 
 import { dashboardState } from "./state.js";
@@ -29,7 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
 // Theme Switching & Persistence
 // ----------------------------------------------------------------------------
 function initTheme() {
-  const savedTheme = localStorage.getItem("modelshield_theme") || "dark";
+  const savedTheme = localStorage.getItem("modelshield-theme") || "dark";
   applyTheme(savedTheme);
 
   const btnDark = document.getElementById("btn-theme-dark");
@@ -45,7 +46,7 @@ function initTheme() {
 
 function applyTheme(theme) {
   document.body.setAttribute("data-theme", theme);
-  localStorage.setItem("modelshield_theme", theme);
+  localStorage.setItem("modelshield-theme", theme);
 
   const btnDark = document.getElementById("btn-theme-dark");
   const btnLight = document.getElementById("btn-theme-light");
@@ -57,7 +58,7 @@ function applyTheme(theme) {
 }
 
 // ----------------------------------------------------------------------------
-// Navigation Setup
+// Navigation & Toolbar Controls
 // ----------------------------------------------------------------------------
 function setupNavigation() {
   const navItems = document.querySelectorAll(".nav-item");
@@ -106,20 +107,22 @@ function setupBottomDock() {
   });
 
   const btnToggle = document.getElementById("btn-toggle-dock");
+  const btnMax = document.getElementById("btn-max-dock");
+  const btnClear = document.getElementById("btn-clear-terminal");
   const dock = document.getElementById("bottom-dock");
-  const toggleIcon = document.getElementById("dock-toggle-icon");
+  const icon = document.getElementById("dock-toggle-icon");
+  const maxIcon = document.getElementById("dock-max-icon");
+
   if (btnToggle && dock) {
     btnToggle.addEventListener("click", () => {
       isDockMinimized = !isDockMinimized;
       dock.classList.toggle("minimized", isDockMinimized);
-      if (toggleIcon) {
-        toggleIcon.className = isDockMinimized ? "ri-arrow-up-s-line" : "ri-arrow-down-s-line";
+      if (icon) {
+        icon.className = isDockMinimized ? "ri-arrow-up-s-line" : "ri-arrow-down-s-line";
       }
     });
   }
 
-  const btnMax = document.getElementById("btn-max-dock");
-  const maxIcon = document.getElementById("dock-max-icon");
   if (btnMax && dock) {
     btnMax.addEventListener("click", () => {
       isDockMaximized = !isDockMaximized;
@@ -130,16 +133,11 @@ function setupBottomDock() {
     });
   }
 
-  const btnClear = document.getElementById("btn-clear-terminal");
   if (btnClear) {
     btnClear.addEventListener("click", () => {
-      const dockBody = document.getElementById("dock-content");
-      if (dockBody) {
-        dockBody.innerHTML = `
-          <div class="terminal-content">
-            <div class="term-prompt"><span class="term-green">modelshield@devbox</span>:<span class="term-dir">~/modelshield</span><span class="term-symbol">$</span> <span class="term-cursor"></span></div>
-          </div>
-        `;
+      const dockContent = document.getElementById("dock-content");
+      if (dockContent) {
+        dockContent.innerHTML = `<div class="term-prompt"><span class="term-user">modelshield@devbox</span>:<span class="term-dir">~/modelshield</span>$ <span class="term-cursor">▋</span></div>`;
       }
     });
   }
@@ -189,12 +187,9 @@ function updateStatusBar() {
   const sbModel = document.getElementById("sb-model");
   const sbRegCount = document.getElementById("sb-reg-count");
   const sbExit = document.getElementById("sb-exit");
-  const sbPolicy = document.getElementById("sb-policy");
 
   if (sbModel) sbModel.textContent = `${candidate}:${candidate.slice(-2)}`;
   if (sbRegCount) sbRegCount.textContent = `${regressions.filter(r => r.enabled).length} active`;
-  if (sbPolicy) sbPolicy.textContent = "strict_block";
-
   if (sbExit) {
     if (decision.decision === "block") {
       sbExit.textContent = "1 (BLOCKED)";
@@ -233,6 +228,17 @@ function renderCurrentView() {
       renderPlaceholderView(container, currentView);
       break;
   }
+}
+
+function renderPlaceholderView(container, viewKey) {
+  const title = viewKey.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase());
+  container.innerHTML = `
+    <div class="placeholder-view">
+      <i class="ri-terminal-window-line placeholder-icon"></i>
+      <div class="placeholder-title">${title} Workspace</div>
+      <div class="placeholder-subtitle">Select a verification view from the sidebar to analyze model regressions.</div>
+    </div>
+  `;
 }
 
 // ----------------------------------------------------------------------------
@@ -319,7 +325,7 @@ function renderFailureExplorer(container) {
       </div>
 
       <div style="margin-top: 12px; font-size: 11px; color: var(--text-muted);">
-        <strong>Failure Evidence:</strong> Performance degraded from <strong>${selectedFailure.metric.baseline_score.toFixed(2)}</strong> to <strong>${selectedFailure.metric.candidate_score.toFixed(2)}</strong> under condition <code>${selectedFailure.condition.type}</code> (Delta: <span style="color: var(--status-block);">${selectedFailure.metric.delta.toFixed(2)}</span> exceeding tolerance threshold -0.15).
+        <strong>Failure Evidence:</strong> Performance degraded from <strong>${selectedFailure.metric.baseline_score.toFixed(2)}</strong> to <strong>${selectedFailure.metric.candidate_score.toFixed(2)}</strong> under condition <code>${selectedFailure.condition.type}</code> (Delta: <span style="color: var(--status-block); font-weight: 600;">${selectedFailure.metric.delta.toFixed(2)}</span> exceeding tolerance threshold -0.15).
       </div>
     `;
   } else if (activeTab === "parameters") {
@@ -347,8 +353,9 @@ function renderFailureExplorer(container) {
       const isPassed = latestReplayResult.is_passed;
       replayBanner = `
         <div class="replay-alert ${isPassed ? 'passed' : 'failed'}">
-          <div style="font-weight: 700; margin-bottom: 4px;">
-            ${isPassed ? '<i class="ri-check-line"></i> REPLAY PASSED' : '<i class="ri-close-line"></i> REPLAY FAILED (REGRESSION REPRODUCED)'}
+          <div style="font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 5px;">
+            <i class="${isPassed ? 'ri-check-line' : 'ri-close-circle-line'}"></i>
+            ${isPassed ? 'REPLAY PASSED' : 'REPLAY FAILED (REGRESSION REPRODUCED)'}
           </div>
           <div>Tested on <strong>${latestReplayResult.candidate}</strong>: Observed ${selectedFailure.metric.name} = <strong>${latestReplayResult.observed_score.toFixed(2)}</strong> (Threshold: <strong>${latestReplayResult.minimum_threshold.toFixed(2)}</strong>).</div>
         </div>
@@ -362,8 +369,8 @@ function renderFailureExplorer(container) {
             <div style="font-weight: 600; color: var(--text-bright); font-size: 12px;">Reproducibility Capsule: <span class="mono" style="color: var(--accent-blue);">${selectedFailure.reproducibility_capsule_id || 'capsule-147'}</span></div>
             <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Frozen deterministic test harness (Python 3.11 / PyTorch)</div>
           </div>
-          <button class="btn-primary" onclick="window.triggerFailureReplay('${selectedFailure.failure_id}')">
-            <i class="ri-play-line"></i> Replay Failure on ${candidate}
+          <button class="btn-topbar-primary" onclick="window.triggerFailureReplay('${selectedFailure.failure_id}')">
+            <i class="ri-play-fill"></i> <span>Replay Failure on ${candidate}</span>
           </button>
         </div>
 
@@ -402,8 +409,8 @@ function renderFailureExplorer(container) {
       </div>
 
       <div style="margin-top: 12px;">
-        <button class="btn-tool" onclick="window.navigateToMemory('${regression ? regression.regression_id : 'regression-147'}')">
-          <i class="ri-database-2-line"></i> Open in Failure Memory
+        <button class="btn-topbar-secondary" onclick="window.navigateToMemory('${regression ? regression.regression_id : 'regression-147'}')">
+          <i class="ri-database-2-line"></i> <span>Open in Failure Memory</span>
         </button>
       </div>
     `;
@@ -451,9 +458,9 @@ function renderFailureExplorer(container) {
           </div>
 
           <div class="detail-quick-stats">
-            <div>Baseline Score: <strong class="mono" style="color: var(--text-bright);">${selectedFailure.metric.baseline_score.toFixed(2)}</strong></div>
-            <div>Candidate Score: <strong class="mono" style="color: var(--status-block);">${selectedFailure.metric.candidate_score.toFixed(2)}</strong></div>
-            <div>Degradation Delta: <span style="color: var(--status-block); font-weight: 700;">${selectedFailure.metric.delta.toFixed(2)}</span></div>
+            <div>Baseline: <strong class="mono" style="color: var(--text-bright);">${selectedFailure.metric.baseline_score.toFixed(2)}</strong></div>
+            <div>Candidate: <strong class="mono" style="color: var(--status-block);">${selectedFailure.metric.candidate_score.toFixed(2)}</strong></div>
+            <div>Delta: <span style="color: var(--status-block); font-weight: 700;">${selectedFailure.metric.delta.toFixed(2)}</span></div>
             <div>Metric: <strong class="mono">${selectedFailure.metric.name}</strong></div>
             <div>Model: <strong class="mono">${selectedFailure.model.name}:${selectedFailure.model.version}</strong></div>
           </div>
@@ -461,11 +468,11 @@ function renderFailureExplorer(container) {
 
         <!-- Detail Tabs Navigation -->
         <div class="detail-tab-nav">
-          <div class="detail-tab-btn ${activeTab === 'overview' ? 'active' : ''}" onclick="window.setFailureTab('overview')">Overview</div>
-          <div class="detail-tab-btn ${activeTab === 'parameters' ? 'active' : ''}" onclick="window.setFailureTab('parameters')">Parameters</div>
-          <div class="detail-tab-btn ${activeTab === 'reproduction' ? 'active' : ''}" onclick="window.setFailureTab('reproduction')">Reproduction</div>
-          <div class="detail-tab-btn ${activeTab === 'regression' ? 'active' : ''}" onclick="window.setFailureTab('regression')">Regression</div>
-          <div class="detail-tab-btn ${activeTab === 'raw' ? 'active' : ''}" onclick="window.setFailureTab('raw')">Raw JSON</div>
+          <div class="detail-tab-btn ${activeTab === 'overview' ? 'active' : ''}" onclick="window.setFailureTab('overview')"><i class="ri-file-info-line"></i> Overview</div>
+          <div class="detail-tab-btn ${activeTab === 'parameters' ? 'active' : ''}" onclick="window.setFailureTab('parameters')"><i class="ri-sound-module-line"></i> Parameters</div>
+          <div class="detail-tab-btn ${activeTab === 'reproduction' ? 'active' : ''}" onclick="window.setFailureTab('reproduction')"><i class="ri-refresh-line"></i> Reproduction</div>
+          <div class="detail-tab-btn ${activeTab === 'regression' ? 'active' : ''}" onclick="window.setFailureTab('regression')"><i class="ri-shield-check-line"></i> Regression</div>
+          <div class="detail-tab-btn ${activeTab === 'raw' ? 'active' : ''}" onclick="window.setFailureTab('raw')"><i class="ri-code-line"></i> Raw JSON</div>
         </div>
 
         <!-- Tab Body Content -->
@@ -501,7 +508,6 @@ window.triggerFailureReplay = function(failureId) {
   const dockTabs = document.querySelectorAll(".dock-tab");
   dockTabs.forEach(t => t.classList.toggle("active", t.getAttribute("data-dock") === "terminal"));
 
-  const decision = dashboardState.getReleaseDecision(candidate);
   const dockBody = document.getElementById("dock-content");
   if (dockBody) {
     const lines = [
@@ -512,7 +518,7 @@ window.triggerFailureReplay = function(failureId) {
       `-------------------------------------------------------------------`,
       replayRes.is_passed ? `REPLAY SUCCESS: Candidate meets threshold requirement.` : `REPLAY FAILURE: Candidate vulnerability reproduced.`
     ];
-    dockBody.innerHTML = createTerminalOutput(lines, `modelshield replay ${failureId} --candidate ${candidate}`, decision);
+    dockBody.innerHTML = createTerminalOutput(lines, `modelshield replay ${failureId} --candidate ${candidate}`);
   }
 
   renderCurrentView();
@@ -544,7 +550,7 @@ function renderFailureMemory(container) {
       `<span class="mono">${r.metric.minimum_threshold.toFixed(2)}</span>`,
       createStatusBadge(r.policy),
       createStatusBadge(r.enabled ? "ENABLED" : "DISABLED"),
-      `<button class="btn-tool" onclick="window.toggleRegressionState('${r.regression_id}')">${r.enabled ? 'Disable' : 'Enable'}</button>`
+      `<button class="btn-topbar-secondary" onclick="window.toggleRegressionState('${r.regression_id}')">${r.enabled ? 'Disable' : 'Enable'}</button>`
     ];
   });
 
@@ -607,7 +613,7 @@ function renderReleaseGate(container) {
   const isReview = decision.decision === "review";
   const statusClass = isBlocked ? "block" : (isReview ? "review" : "pass");
   const verdictText = isBlocked ? "RELEASE BLOCKED" : (isReview ? "RELEASE REVIEW REQUIRED" : "RELEASE APPROVED");
-  const icon = isBlocked ? '<i class="ri-close-circle-fill"></i>' : (isReview ? '<i class="ri-alert-fill"></i>' : '<i class="ri-checkbox-circle-fill"></i>');
+  const iconClass = isBlocked ? "ri-close-circle-line" : (isReview ? "ri-alert-line" : "ri-check-line");
 
   const contractPayload = {
     schema_version: decision.schema_version,
@@ -629,7 +635,7 @@ function renderReleaseGate(container) {
     <div class="gate-card ${statusClass}">
       <div class="gate-headline">
         <div class="gate-status-text ${statusClass}">
-          ${icon} ${verdictText}
+          <i class="${iconClass}"></i> <span>${verdictText}</span>
         </div>
         <div class="mono" style="color: var(--text-muted); font-size: 11px;">${decision.decision_id} • ${decision.timestamp.slice(0, 19)}Z</div>
       </div>
@@ -655,30 +661,7 @@ function renderReleaseGate(container) {
 }
 
 // ----------------------------------------------------------------------------
-// Placeholder for Secondary Views
-// ----------------------------------------------------------------------------
-function renderPlaceholderView(container, viewName) {
-  const titles = {
-    pipelines: "CI / CD Pipelines",
-    checks: "CI Checks & Automated Tests",
-    artifacts: "Model Artifacts & Capsules",
-    reports: "Regression Reports & Audits",
-    settings: "Workbench Settings",
-    integrations: "Git & Webhook Integrations",
-    audit: "Audit Log & Telemetry"
-  };
-
-  container.innerHTML = `
-    <div class="empty-view-state">
-      <i class="ri-terminal-window-line empty-view-icon"></i>
-      <div class="empty-view-title">${titles[viewName] || viewName.toUpperCase()}</div>
-      <div class="empty-view-desc">Select a view from the sidebar to begin analyzing your model verification results.</div>
-    </div>
-  `;
-}
-
-// ----------------------------------------------------------------------------
-// Bottom Dock Rendering
+// Bottom Dock Rendering (Split Terminal & GitHub/CI Run Status)
 // ----------------------------------------------------------------------------
 function renderDockContent() {
   const dockBody = document.getElementById("dock-content");
@@ -689,54 +672,87 @@ function renderDockContent() {
 
   if (currentDockTab === "terminal") {
     const lines = [
-      `<span class="term-info-icon"><i class="ri-information-line"></i></span> Initializing ModelShield regression runner...`,
-      `<span class="term-info-icon"><i class="ri-information-line"></i></span> Loaded ${decision.detailed_checks.length} active regression checks`
+      `Initializing ModelShield regression runner...`,
+      `Loaded ${decision.detailed_checks.length} active regression checks`
     ];
 
     decision.detailed_checks.forEach(chk => {
-      const isPassed = chk.status === "passed";
-      const icon = isPassed ? `<span class="term-green"><i class="ri-check-line"></i></span>` : `<span class="term-red"><i class="ri-check-line"></i></span>`;
-      const statusText = isPassed ? `<span class="term-green">PASSED</span>` : (chk.status === "review_required" ? `<span class="term-yellow">REVIEW</span>` : `<span class="term-red">FAILED (BLOCK)</span>`);
-
-      lines.push(`${icon} ${chk.regression_id.padEnd(16)} ${chk.condition_type.padEnd(18)} ${chk.observed_score.toFixed(2)} / ${chk.minimum_threshold.toFixed(2)}  ${statusText}`);
+      const isPass = chk.status === "passed";
+      const icon = isPass ? "✓" : "✖";
+      const verdict = isPass ? "PASSED" : (chk.status === "review_required" ? "REVIEW REQUIRED" : `FAILED (${chk.policy.toUpperCase()})`);
+      lines.push(`${icon} ${chk.regression_id.padEnd(16)} ${chk.condition_type.padEnd(20)} ${chk.observed_score.toFixed(2)} / ${chk.minimum_threshold.toFixed(2)}  ${verdict}`);
     });
 
-    if (decision.summary.failed > 0) {
-      lines.push(`<span class="term-red term-bold"><i class="ri-close-line"></i> ${decision.summary.failed}/${decision.summary.total_regressions} checks failed (blocking)</span>`);
-      lines.push(``);
+    if (decision.decision === "block") {
+      lines.push(`✖ ${decision.summary.failed}/${decision.summary.total_regressions} checks failed (blocking)`);
       lines.push(`RELEASE BLOCKED`);
-      lines.push(`Process exited with code ${decision.exit_code}`);
-    } else if (decision.summary.review_required > 0) {
-      lines.push(`<span class="term-yellow term-bold"><i class="ri-alert-line"></i> ${decision.summary.review_required} check(s) require review</span>`);
-      lines.push(``);
+      lines.push(`Process exited with code 1`);
+    } else if (decision.decision === "review") {
+      lines.push(`▲ ${decision.summary.review_required} check(s) require review`);
       lines.push(`RELEASE REVIEW REQUIRED`);
-      lines.push(`Process exited with code ${decision.exit_code}`);
+      lines.push(`Process exited with code 2`);
     } else {
-      lines.push(`<span class="term-green term-bold"><i class="ri-check-double-line"></i> All ${decision.summary.total_regressions} checks passed</span>`);
-      lines.push(``);
+      lines.push(`✓ All ${decision.summary.total_regressions} checks passed`);
       lines.push(`RELEASE APPROVED`);
-      lines.push(`Process exited with code ${decision.exit_code}`);
+      lines.push(`Process exited with code 0`);
     }
 
-    dockBody.innerHTML = createTerminalOutput(lines, `modelshield regression run --candidate ${candidate}`, decision);
+    const checksHtml = decision.detailed_checks.map(chk => {
+      const isPass = chk.status === "passed";
+      return `
+        <div class="ci-check-item">
+          <span class="mono">${chk.regression_id}</span>
+          <span style="color: var(--text-muted);">${chk.condition_type}</span>
+          <span style="color: ${isPass ? 'var(--status-pass)' : 'var(--status-block)'}; font-weight: 600;">
+            ${isPass ? '<i class="ri-check-line"></i> Passed' : '<i class="ri-close-circle-line"></i> Failed'}
+          </span>
+        </div>
+      `;
+    }).join("");
+
+    dockBody.innerHTML = `
+      <div class="terminal-split">
+        <div class="terminal-left">
+          ${createTerminalOutput(lines, `modelshield regression run --candidate ${candidate}`)}
+        </div>
+        <div class="terminal-right">
+          <div class="ci-run-card">
+            <div class="ci-run-header">
+              <span>Latest Run: <strong>#1287</strong></span>
+              <span class="badge ${decision.decision === 'block' ? 'badge-block' : 'badge-pass'}">
+                ${decision.decision.toUpperCase()}
+              </span>
+            </div>
+            <div class="ci-run-meta-row"><span>Workflow</span> <span class="ci-run-meta-val mono">modelshield-regression.yml</span></div>
+            <div class="ci-run-meta-row"><span>Trigger</span> <span class="ci-run-meta-val">push</span></div>
+            <div class="ci-run-meta-row"><span>Branch</span> <span class="ci-run-meta-val mono">main</span></div>
+            <div class="ci-run-meta-row"><span>Commit</span> <span class="ci-run-meta-val mono">a1b2c3d</span></div>
+            <div class="ci-run-meta-row"><span>Duration</span> <span class="ci-run-meta-val mono">00:02:31</span></div>
+            <div class="ci-run-meta-row"><span>Finished</span> <span class="ci-run-meta-val">2m ago</span></div>
+          </div>
+          <div class="ci-checks-list">
+            <div class="ci-checks-header">Checks (${decision.detailed_checks.length})</div>
+            ${checksHtml}
+          </div>
+        </div>
+      </div>
+    `;
   } else if (currentDockTab === "logs") {
     dockBody.innerHTML = `
       <div style="color: var(--text-muted); font-size: 11px; line-height: 1.6;">
-        <div>[${new Date().toISOString()}] <span style="color: var(--accent-blue);">[INFO]</span> Initialized session for model '${candidate}'</div>
-        <div>[${new Date().toISOString()}] <span style="color: var(--accent-blue);">[INFO]</span> Evaluated ${decision.summary.total_regressions} regression conditions against tolerance baseline</div>
-        <div>[${new Date().toISOString()}] <span style="color: var(--accent-blue);">[INFO]</span> Summary: ${decision.summary.passed} passed, ${decision.summary.failed} failed, ${decision.summary.review_required} review required</div>
-        <div>[${new Date().toISOString()}] <span style="${decision.decision === 'block' ? 'color: var(--status-block);' : 'color: var(--status-pass);'}">[${decision.decision === 'block' ? 'ERROR' : 'INFO'}]</span> Gating Verdict: ${decision.decision.toUpperCase()} (Exit code ${decision.exit_code})</div>
+        <div>[${new Date().toISOString()}] <span style="color: var(--accent-blue);">INFO</span>  Evaluated candidate '${candidate}' against active regression bank</div>
+        <div>[${new Date().toISOString()}] <span style="color: var(--accent-blue);">INFO</span>  Summary: ${decision.summary.passed} passed, ${decision.summary.failed} failed, ${decision.summary.review_required} review required</div>
+        <div>[${new Date().toISOString()}] <span style="${decision.decision === 'block' ? 'color: var(--status-block);' : 'color: var(--status-pass);'}">${decision.decision === 'block' ? 'ERROR' : 'INFO'}</span> Gating Verdict: ${decision.decision.toUpperCase()} (Exit code ${decision.exit_code})</div>
       </div>
     `;
   } else if (currentDockTab === "ci") {
     const isBlocked = decision.decision === "block";
     dockBody.innerHTML = `
-      <div style="display: flex; gap: 24px; font-size: 11px; padding: 4px 0;">
-        <div>Pipeline: <strong>modelshield-regression.yml</strong></div>
-        <div>Target Model: <strong class="mono">${candidate}</strong></div>
+      <div style="display: flex; gap: 24px; font-size: 11px; padding: 6px 0;">
+        <div>Pipeline: <strong>modelshield-gate.yml</strong></div>
+        <div>Target Model: <strong>${candidate}</strong></div>
         <div>Verdict: <span class="badge ${isBlocked ? 'badge-block' : (decision.decision === 'review' ? 'badge-review' : 'badge-pass')}">${decision.decision.toUpperCase()} (EXIT ${decision.exit_code})</span></div>
         <div>Policy Enforced: <strong class="mono">strict_block</strong></div>
-        <div>Trigger: <strong class="mono">push</strong></div>
       </div>
     `;
   }
@@ -750,7 +766,6 @@ function runReleaseGateWorkflow() {
   });
   syncAllUI();
 
-  // Highlight terminal dock tab
   currentDockTab = "terminal";
   const dockTabs = document.querySelectorAll(".dock-tab");
   dockTabs.forEach(t => t.classList.toggle("active", t.getAttribute("data-dock") === "terminal"));

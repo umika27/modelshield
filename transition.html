@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ModelShield — The Developer Machine | Code → Model → Shield → Deploy</title>
+  <meta name="description" content="Enter the developer layer of ModelShield: Experience how AI models are ingested, stress-tested, verified, and safely deployed in an immersive 3D environment.">
+
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Remix Icon CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet"/>
+
+  <!-- Three.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <link rel="stylesheet" href="transition.css">
+</head>
+<body data-theme="dark">
+
+  <!-- Fullscreen 3D Spatial Canvas -->
+  <canvas id="stage-canvas"></canvas>
+
+  <!-- Deep Spatial Atmosphere & Ambient Lights -->
+  <div class="spatial-overlay"></div>
+  <div class="ambient-nebula nebula-1"></div>
+  <div class="ambient-nebula nebula-2"></div>
+  <div class="grid-mesh"></div>
+
+  <!-- Top Minimalist HUD Header -->
+  <header class="hud-nav">
+    <div class="hud-brand">
+      <a href="index.html" class="hud-brand-link">
+        <div class="brand-glyph"><i class="ri-shield-check-line"></i></div>
+        <div class="brand-title-group">
+          <span class="brand-title">MODELSHIELD</span>
+          <span class="brand-sub mono">// ENGINE_LAYER_V2</span>
+        </div>
+      </a>
+    </div>
+
+    <div class="hud-center-telemetry mono">
+      <span class="telemetry-item"><span class="telemetry-label">BRANCH</span> <strong class="telemetry-val">main</strong></span>
+      <span class="telemetry-sep">•</span>
+      <span class="telemetry-item"><span class="telemetry-label">PIPELINE</span> <strong class="telemetry-val">modelshield-verify.yml</strong></span>
+      <span class="telemetry-sep">•</span>
+      <span class="telemetry-item"><span class="telemetry-label">STATE</span> <strong class="telemetry-val" id="hud-state-label">01: CODE</strong></span>
+    </div>
+
+    <div class="hud-actions">
+      <a href="index.html" class="hud-btn-ghost"><i class="ri-arrow-left-line"></i> <span>Overview</span></a>
+      <a href="dashboard/index.html" class="hud-btn-primary">
+        <span>Launch Workbench</span>
+        <i class="ri-arrow-right-up-line"></i>
+      </a>
+    </div>
+  </header>
+
+  <!-- Floating Spatial Terminal Node -->
+  <div class="floating-cli" id="floating-cli">
+    <div class="cli-header">
+      <div class="cli-dots">
+        <span class="cli-dot red"></span>
+        <span class="cli-dot yellow"></span>
+        <span class="cli-dot green"></span>
+      </div>
+      <div class="cli-title mono">modelshield@core: ~/workspace</div>
+      <div class="cli-badge mono" id="cli-badge">IDLE</div>
+    </div>
+    <div class="cli-body mono" id="cli-body">
+      <div class="cli-line prompt-line">
+        <span class="user">modelshield@core</span>:<span class="path">~/model</span>$ <span class="cmd" id="cli-cmd-text">git status</span>
+      </div>
+      <div class="cli-stream" id="cli-stream">
+        <div class="cli-stream-row info"># Tracked files: model.pkl, weights.bin, config.yaml</div>
+      </div>
+      <div class="cli-progress-bar-wrapper" id="cli-progress-wrapper" style="display: none;">
+        <div class="cli-progress-fill" id="cli-progress-fill"></div>
+      </div>
+    </div>
+    <div class="cli-footer mono">
+      <div class="cli-footer-metric">
+        <span class="label">SECURITY SCORE</span>
+        <span class="val" id="cli-score">--<small>/100</small></span>
+      </div>
+      <div class="cli-footer-status" id="cli-status-pill">
+        <i class="ri-code-s-slash-line"></i>
+        <span id="cli-status-txt">AWAITING BUILD</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vertical Narrative Scrubber Track (Left Edge) -->
+  <nav class="narrative-scrubber" id="scrubber">
+    <div class="scrubber-line">
+      <div class="scrubber-indicator" id="scrubber-indicator"></div>
+    </div>
+    <button class="scrubber-node active" data-index="0">
+      <span class="node-num mono">01</span>
+      <span class="node-text">Code</span>
+    </button>
+    <button class="scrubber-node" data-index="1">
+      <span class="node-num mono">02</span>
+      <span class="node-text">Build</span>
+    </button>
+    <button class="scrubber-node" data-index="2">
+      <span class="node-num mono">03</span>
+      <span class="node-text">Scan</span>
+    </button>
+    <button class="scrubber-node" data-index="3">
+      <span class="node-num mono">04</span>
+      <span class="node-text">Attack</span>
+    </button>
+    <button class="scrubber-node" data-index="4">
+      <span class="node-num mono">05</span>
+      <span class="node-text">Shield</span>
+    </button>
+    <button class="scrubber-node" data-index="5">
+      <span class="node-num mono">06</span>
+      <span class="node-text">Deploy</span>
+    </button>
+  </nav>
+
+  <!-- Sticky Spatial Story Stage Overlay -->
+  <main class="spatial-story-container" id="story-container">
+    
+    <div class="sticky-hud-frame">
+      
+      <!-- Center-Aligned Cinematic State Statements -->
+      <div class="cinematic-headline-box" id="headline-box">
+        <div class="state-eyebrow mono" id="state-eyebrow">
+          <span class="eyebrow-ping"></span>
+          <span id="eyebrow-text">PHASE 01 // SOURCE INITIALIZATION</span>
+        </div>
+        <h1 class="state-headline" id="state-headline">
+          Your model starts <br><span class="highlight-text">as code.</span>
+        </h1>
+        <p class="state-subheadline" id="state-subheadline">
+          Every neural network begins as weight artifacts, dataset splits, and hyperparameters suspended in source control.
+        </p>
+
+        <!-- Dynamic Contextual Action / Telemetry Badge -->
+        <div class="state-action-badge" id="state-action-badge">
+          <div class="badge-icon"><i class="ri-git-commit-line" id="badge-icon-elem"></i></div>
+          <div class="badge-info mono">
+            <span class="badge-primary-text" id="badge-primary">model.pkl • weights.bin • config.yaml</span>
+            <span class="badge-secondary-text" id="badge-secondary">Ready for execution graph synthesis</span>
+          </div>
+        </div>
+
+        <!-- Scroll Directive Indicator -->
+        <div class="scroll-directive mono" id="scroll-directive">
+          <span>SCROLL TO ADVANCE ENGINE</span>
+          <i class="ri-arrow-down-double-line directive-arrow"></i>
+        </div>
+      </div>
+
+      <!-- Final Interactive Call to Action (Emerges in Stage 6) -->
+      <div class="final-destination-card" id="final-card" style="display: none;">
+        <div class="final-icon-glow">
+          <i class="ri-shield-keyhole-line"></i>
+        </div>
+        <h2 class="final-title">Ship with Confidence.</h2>
+        <p class="final-desc">
+          You have passed through the ModelShield security engine. Your candidate model is verified, regression-free, and ready for production deployment.
+        </p>
+        <div class="final-cta-row">
+          <a href="dashboard/index.html" class="final-cta-btn">
+            <span>Enter Security Workspace</span>
+            <i class="ri-arrow-right-line"></i>
+          </a>
+          <a href="index.html" class="final-secondary-btn">
+            <span>Return to Overview</span>
+          </a>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 6 Virtual Story Scroll Anchors (Provides Smooth Spatial Interpolation) -->
+    <div class="scroll-track-layer">
+      <div class="story-stop" id="stop-1" data-stage="0"></div>
+      <div class="story-stop" id="stop-2" data-stage="1"></div>
+      <div class="story-stop" id="stop-3" data-stage="2"></div>
+      <div class="story-stop" id="stop-4" data-stage="3"></div>
+      <div class="story-stop" id="stop-5" data-stage="4"></div>
+      <div class="story-stop" id="stop-6" data-stage="5"></div>
+    </div>
+
+  </main>
+
+  <script src="transition.js"></script>
+</body>
+</html>
