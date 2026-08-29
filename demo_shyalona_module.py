@@ -1,10 +1,3 @@
-"""
-Standalone demo of Shyalona's module, using the mock JSON contract.
-Run: python demo_shyalona_module.py
-
-This proves fingerprint -> memory -> capsule -> regression works end to end
-without needing Umika's real evaluator or Kartikay's CLI.
-"""
 
 import json
 import sys
@@ -21,12 +14,11 @@ from reproducibility.capsule import Capsule, save_capsule, get_capsule
 def main():
     mock_path = Path(__file__).parent / "examples" / "mock_evaluation_result.json"
     results = [EvaluationResult.from_dict(d) for d in json.loads(mock_path.read_text())]
-
-    mem = FailureMemory(db_path=":memory:")  # in-memory for the demo
+    mem = FailureMemory(db_path="modelshield.db")
     mem.ensure_model("candidate-v2", role="candidate")
 
     for result in results:
-        eval_id = mem.save_evaluation(result.__dict__)
+        eval_id = mem.save_evaluation(result.__dict__)  
 
         if result.status != "failure":
             print(f"[pass]    {result.condition:20s} delta={result.delta:+.2f}")

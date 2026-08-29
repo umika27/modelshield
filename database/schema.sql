@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS models (
     model_id        TEXT PRIMARY KEY,      -- e.g. "candidate-v2"
     role            TEXT NOT NULL CHECK (role IN ('baseline', 'candidate')),
     reference       TEXT,                  -- artifact path / registry pointer
-    created_at      TEXT DEFAULT (datetime('now'))
+    created_at      TEXT DEFAULT (datetime('now','localtime'))
 );
 
 -- One evaluation run of a model under one challenge condition
@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS evaluations (
     delta           REAL NOT NULL,
     status          TEXT NOT NULL CHECK (status IN ('pass', 'failure')),
     seed            INTEGER,
-    created_at      TEXT DEFAULT (datetime('now'))
+    created_at      TEXT DEFAULT (datetime('now','localtime'))
 );
 
 -- A verified/unverified failure — the Failure Fingerprint
@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS failures (
     verified        INTEGER NOT NULL DEFAULT 0 CHECK (verified IN (0, 1)),
     model_id        TEXT REFERENCES models(model_id),
     dataset_ref     TEXT,
-    created_at      TEXT DEFAULT (datetime('now'))
+    created_at      TEXT DEFAULT (datetime('now','localtime'))
 );
 
 -- Reproducibility Capsule — locked context needed to replay an evaluation
@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS capsules (
     environment           TEXT,             -- JSON blob (deps/versions)
     metrics               TEXT,             -- JSON blob
     run_id                TEXT,
-    created_at            TEXT DEFAULT (datetime('now'))
+    created_at            TEXT DEFAULT (datetime('now','localtime'))
 );
 
 -- Regression-ready failure record — consumed by Kartikay's regression engine
@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS regression_tests (
     threshold       REAL NOT NULL,
     policy          TEXT NOT NULL CHECK (policy IN ('pass', 'review', 'block')),
     enabled         INTEGER NOT NULL DEFAULT 1 CHECK (enabled IN (0, 1)),
-    created_at      TEXT DEFAULT (datetime('now'))
+    created_at      TEXT DEFAULT (datetime('now','localtime'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_evaluations_experiment ON evaluations(experiment_id);
