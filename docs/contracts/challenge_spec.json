@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0",
+
+  "challenge_id": "challenge-001",
+
+  "type": "blur",
+
+  "parameters": {
+    "severity": 0.6
+  },
+
+  "parent_challenge_id": null,
+
+  "source": "initial_suite",
+
+  "reason": "initial_evaluation",
+
+  "reproducible": true,
+
+  "seed": 42
+}

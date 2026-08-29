@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0",
+
+  "model_id": "model-002",
+
+  "name": "candidate-v2",
+
+  "version": "v2",
+
+  "role": "candidate",
+
+  "framework": "pytorch",
+
+  "task": "image_classification",
+
+  "artifact_reference": "models/candidate-v2",
+
+  "preprocessing_version": "1.0",
+
+  "created_at": "2026-08-29T09:00:00Z"
+}
