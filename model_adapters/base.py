@@ -9,6 +9,8 @@ from typing import Any
 
 from torch import nn
 
+from .preprocessing import PreprocessingSpec
+
 
 @dataclass(frozen=True)
 class AdapterMetadata:
@@ -42,6 +44,11 @@ class ModelAdapter(ABC):
     @abstractmethod
     def load(self) -> nn.Module:
         """Instantiate, optionally checkpoint-load, and return a module."""
+
+    @property
+    @abstractmethod
+    def preprocessing(self) -> PreprocessingSpec:
+        """Describe inference preprocessing after image-space challenges."""
 
     @staticmethod
     def normalize_path(path: str | Path | None) -> Path | None:

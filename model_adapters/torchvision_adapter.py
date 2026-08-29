@@ -8,10 +8,12 @@ from typing import Any
 
 import torch
 from torch import Tensor, nn
+from torch.nn import functional as F
 from torchvision import models
 
 from .base import AdapterMetadata, ModelAdapter
 from .exceptions import CheckpointLoadError, InvalidCheckpointError, UnsupportedArchitectureError
+from .preprocessing import IMAGENET_PREPROCESSING, PreprocessingSpec
 
 
 class TorchvisionModelAdapter(ModelAdapter):
@@ -59,6 +61,19 @@ class TorchvisionModelAdapter(ModelAdapter):
             checkpoint_path=str(self.checkpoint_path) if self.checkpoint_path is not None else None,
         )
 
+    @property
+    def preprocessing(self) -> PreprocessingSpec:
+        """Explicit offline ImageNet preprocessing for all supported classifiers."""
+        return IMAGENET_PREPROCESSING
+
+    def preprocess(self, images: Tensor) -> Tensor:
+        """Resize and normalize canonical NCHW RGB float32 images without mutation."""
+        self._validate_canonical_batch(images)
+        resized = F.interpolate(images.detach().clone(), size=self.preprocessing.input_size, mode="bilinear", align_corners=False)
+        mean = resized.new_tensor(self.preprocessing.mean).view(1, 3, 1, 1)
+        std = resized.new_tensor(self.preprocessing.std).view(1, 3, 1, 1)
+        return (resized - mean) / std
+
     def load(self) -> nn.Module:
         """Build the requested classifier and strictly load an optional checkpoint."""
         model = self._build_model()
@@ -80,6 +95,19 @@ class TorchvisionModelAdapter(ModelAdapter):
         else:  # Defensive guard for future registry additions.
             raise UnsupportedArchitectureError(f"no classifier replacement configured for '{self.architecture}'")
         return model
+
+    @staticmethod
+    def _validate_canonical_batch(images: Tensor) -> None:
+        if not isinstance(images, Tensor):
+            raise TypeError("images must be a torch.Tensor")
+        if images.dtype != torch.float32:
+            raise ValueError("images dtype must be torch.float32")
+        if images.ndim != 4 or images.shape[1] != 3:
+            raise ValueError("images must have shape (N, 3, H, W)")
+        if images.shape[0] == 0 or images.shape[2] == 0 or images.shape[3] == 0:
+            raise ValueError("images must have non-empty batch and spatial dimensions")
+        if not torch.isfinite(images).all() or torch.any(images < 0) or torch.any(images > 1):
+            raise ValueError("images must contain finite values in [0, 1]")
 
     def _load_checkpoint(self, model: nn.Module, path: Path) -> None:
         if not path.is_file():

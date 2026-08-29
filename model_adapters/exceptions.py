@@ -19,3 +19,7 @@ class CheckpointLoadError(ModelAdapterError):
 
 class InvalidCheckpointError(CheckpointLoadError):
     """Raised when checkpoint content is not a supported state-dict format."""
+
+
+class ModelDatasetCompatibilityError(ModelAdapterError):
+    """Raised when a model's output classes do not match a dataset."""
