@@ -1,0 +1,42 @@
+# =========================
+# Core ML
+# =========================
+torch
+torchvision
+numpy
+pandas
+scikit-learn
+
+# =========================
+# Computer Vision / Challenges
+# =========================
+opencv-python
+albumentations
+
+# =========================
+# API
+# =========================
+fastapi
+uvicorn[standard]
+
+# =========================
+# CLI
+# =========================
+typer
+
+# =========================
+# Configuration / Environment
+# =========================
+python-dotenv
+pydantic
+
+# =========================
+# Testing
+# =========================
+pytest
+pytest-cov
+
+# =========================
+# Utilities
+# =========================
+requests
