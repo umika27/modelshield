@@ -1,6 +1,6 @@
 """
-Failure Fingerprint — turns a raw EvaluationResult (Umika's output) into a
-structured FailureRecord (Shyalona's domain).
+Failure Fingerprint — turns a raw EvaluationResult into a
+structured FailureRecord.
 
 Shared JSON contract (frozen, Section 12 of the playbook):
 
