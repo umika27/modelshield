@@ -3,269 +3,58 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ModelShield — ML Regression Protection Workbench</title>
-  <!-- Remix Icon CDN -->
-  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet"/>
+  <title>ModelShield — Release Analysis</title>
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body data-theme="dark">
-
-  <!-- 1. Top Toolbar -->
   <header class="topbar">
     <div class="topbar-left">
-      <button class="btn-sidebar-toggle" id="btn-sidebar-toggle" title="Toggle Sidebar (Menu Bar Mode)">
-        <i class="ri-menu-fold-line" id="sidebar-toggle-icon"></i>
-      </button>
-
       <div class="brand-logo">
-        <i class="ri-shield-check-line brand-icon"></i>
+        <i class="ri-shield-check-line brand-icon" aria-hidden="true"></i>
         <div class="brand-text">
           <span class="brand-name">MODELSHIELD</span>
-          <span class="brand-subtitle">ML Regression Protection</span>
+          <span class="brand-subtitle">Pre-deployment intelligence</span>
         </div>
       </div>
-
-      <div class="topbar-divider"></div>
-
-      <div class="repo-info">
-        <span class="meta-label">Repository:</span>
-        <strong class="meta-value mono">modelshield</strong>
-      </div>
-
-      <div class="branch-badge">
-        <i class="ri-git-branch-line"></i>
-        <span>main</span>
-      </div>
-
-      <div class="status-clean-badge">
-        <span class="clean-dot"></span>
-        <span>Clean</span>
-      </div>
+      <div class="topbar-divider" aria-hidden="true"></div>
+      <div class="repo-info"><span class="meta-label">Workspace:</span><strong class="meta-value mono">modelshield</strong></div>
     </div>
-
     <div class="topbar-right">
-      <!-- Theme Switcher Segmented Control -->
-      <div class="theme-switcher" id="theme-switcher">
-        <button class="theme-btn active" id="btn-theme-dark" title="Switch to Dark Theme">
-          <span class="theme-dot">●</span> Dark
-        </button>
-        <button class="theme-btn" id="btn-theme-light" title="Switch to Light Theme">
-          Light
-        </button>
-      </div>
-
-      <div class="env-badge">
-        <i class="ri-cpu-line"></i>
-        <span>PyTorch 2.2 • CUDA 12.1</span>
-      </div>
-
-      <button class="btn-topbar-secondary" id="btn-docs" title="View Documentation">
-        <i class="ri-book-read-line"></i>
-        <span>Docs</span>
-      </button>
-
-      <button class="btn-topbar-primary" id="btn-run-gate" title="Execute automated CI/CD Release Gating">
-        <i class="ri-play-line"></i>
-        <span>Run Release Gate</span>
+      <button class="btn-topbar-primary" id="btn-load-latest" type="button" title="Load the latest completed analysis">
+        <i class="ri-refresh-line" aria-hidden="true"></i><span>Load Latest Analysis</span>
       </button>
     </div>
   </header>
 
-  <!-- 2. Secondary Toolbar (IDE Debug / Config Selector) -->
-  <div class="secondary-toolbar">
-    <div class="config-selector-group">
-      <label for="model-select" class="config-label">Candidate</label>
-      <div class="select-wrapper">
-        <select class="ide-select" id="model-select">
-          <option value="candidate-v2">candidate-v2 (Exploration Run)</option>
-          <option value="candidate-v3" selected>candidate-v3 (Release Candidate)</option>
-          <option value="candidate-v4">candidate-v4 (Patched Release)</option>
-        </select>
-        <i class="ri-arrow-down-s-line select-arrow"></i>
-      </div>
-    </div>
-
-    <div class="config-selector-group">
-      <label for="baseline-select" class="config-label">Baseline</label>
-      <div class="select-wrapper">
-        <select class="ide-select" id="baseline-select">
-          <option value="production-v1">production-v1 (Baseline)</option>
-        </select>
-        <i class="ri-arrow-down-s-line select-arrow"></i>
-      </div>
-    </div>
-
-    <button class="btn-icon" id="btn-refresh-state" title="Re-evaluate and refresh state">
-      <i class="ri-refresh-line"></i>
-    </button>
-
-    <div class="secondary-divider"></div>
-
-    <!-- Agent GIF Component Container -->
-    <div id="agent-gif-container"></div>
+  <div class="analysis-context" aria-label="Current analysis context">
+    <div><span>Candidate</span><output class="mono" id="model-select">No analysis loaded</output></div>
+    <div><span>Baseline</span><output class="mono" id="baseline-select">No analysis loaded</output></div>
   </div>
 
-  <!-- 3. Main Container -->
   <div class="app-container">
-    
-    <!-- Sidebar Navigation -->
-    <aside class="sidebar" id="sidebar">
-      <div class="sidebar-section">
-        <div class="sidebar-section-title">VERIFICATION</div>
-        <div class="nav-item active" data-view="comparison" data-tooltip="Model Comparison">
-          <i class="ri-git-compare-line nav-icon"></i>
-          <span>Model Comparison</span>
-        </div>
-        <div class="nav-item" data-view="explorer" data-tooltip="Failure Explorer">
-          <i class="ri-search-eye-line nav-icon"></i>
-          <span>Failure Explorer</span>
-        </div>
-        <div class="nav-item" data-view="memory" data-tooltip="Failure Memory">
-          <i class="ri-database-2-line nav-icon"></i>
-          <span>Failure Memory</span>
-        </div>
-        <div class="nav-item" data-view="results" data-tooltip="Regression Results">
-          <i class="ri-list-check-3 nav-icon"></i>
-          <span>Regression Results</span>
-        </div>
-        <div class="nav-item" data-view="gate" data-tooltip="Release Gate">
-          <i class="ri-shield-check-line nav-icon"></i>
-          <span>Release Gate</span>
-        </div>
-      </div>
-
-      <div class="sidebar-section">
-        <div class="sidebar-section-title">CI / CD</div>
-        <div class="nav-item" data-view="pipelines" data-tooltip="Pipelines">
-          <i class="ri-flow-chart nav-icon"></i>
-          <span>Pipelines</span>
-        </div>
-        <div class="nav-item" data-view="checks" data-tooltip="Checks">
-          <i class="ri-checkbox-circle-line nav-icon"></i>
-          <span>Checks</span>
-        </div>
-        <div class="nav-item" data-view="artifacts" data-tooltip="Artifacts">
-          <i class="ri-box-3-line nav-icon"></i>
-          <span>Artifacts</span>
-        </div>
-        <div class="nav-item" data-view="reports" data-tooltip="Reports">
-          <i class="ri-bar-chart-2-line nav-icon"></i>
-          <span>Reports</span>
-        </div>
-      </div>
-
-      <div class="sidebar-section">
-        <div class="sidebar-section-title">PROJECT</div>
-        <div class="nav-item" data-view="settings" data-tooltip="Settings">
-          <i class="ri-settings-3-line nav-icon"></i>
-          <span>Settings</span>
-        </div>
-        <div class="nav-item" data-view="integrations" data-tooltip="Integrations">
-          <i class="ri-plug-line nav-icon"></i>
-          <span>Integrations</span>
-        </div>
-        <div class="nav-item" data-view="audit" data-tooltip="Audit Log">
-          <i class="ri-history-line nav-icon"></i>
-          <span>Audit Log</span>
-        </div>
-      </div>
-
-      <div class="sidebar-footer">
-        <div class="sidebar-version">ModelShield v1.0.0</div>
-        <div class="sidebar-copyright">© 2025 ModelShield Team</div>
-        <div class="sidebar-links">
-          <a href="#docs">Docs</a> • <a href="#github">GitHub</a> • <a href="#support">Support</a>
-        </div>
-      </div>
-    </aside>
-
-    <!-- Center Column -->
     <div class="center-column">
-      
-      <!-- Breadcrumb Bar -->
-      <nav class="breadcrumb-bar" id="breadcrumb-bar">
+      <nav class="breadcrumb-bar" aria-label="Analysis location">
         <div class="breadcrumb-left">
-          <i class="ri-home-4-line breadcrumb-home"></i>
-          <span class="breadcrumb-item">modelshield</span>
-          <span class="breadcrumb-sep">/</span>
-          <span class="breadcrumb-item" id="crumb-candidate">candidate-v3</span>
-          <span class="breadcrumb-sep">/</span>
-          <span class="breadcrumb-item active" id="crumb-view">model-comparison</span>
-        </div>
-        <div class="breadcrumb-actions">
-          <button class="btn-crumb-action" title="Share current view"><i class="ri-share-line"></i> Share</button>
-          <button class="btn-crumb-action" title="Export artifacts"><i class="ri-download-2-line"></i> Export</button>
-          <button class="btn-crumb-action" title="More options"><i class="ri-more-fill"></i></button>
+          <i class="ri-home-4-line breadcrumb-home" aria-hidden="true"></i>
+          <span class="breadcrumb-item">modelshield</span><span class="breadcrumb-sep" aria-hidden="true">/</span>
+          <span class="breadcrumb-item" id="crumb-candidate">no analysis</span><span class="breadcrumb-sep" aria-hidden="true">/</span>
+          <span class="breadcrumb-item active">release analysis</span>
         </div>
       </nav>
-
-      <!-- Main Workbench Area -->
-      <main class="main-view" id="view-content">
-        <!-- Injected dynamically via app.js -->
-      </main>
-
-      <!-- Bottom Dock (Terminal / Logs / CI Status) -->
-      <section class="bottom-dock" id="bottom-dock">
-        <!-- Resizable Dock Handle -->
-        <div class="dock-resize-handle" id="dock-resize-handle" title="Drag up or down to resize terminal panel"></div>
-        <div class="dock-header">
-          <div class="dock-tabs">
-            <div class="dock-tab active" data-dock="terminal">
-              <i class="ri-terminal-box-line"></i> TERMINAL
-            </div>
-            <div class="dock-tab" data-dock="logs">
-              <i class="ri-file-list-3-line"></i> EXECUTION LOGS
-            </div>
-            <div class="dock-tab" data-dock="ci">
-              <i class="ri-shield-check-line"></i> CI STATUS
-            </div>
-          </div>
-          <div class="dock-controls">
-            <div class="dock-shell-selector">
-              <span class="mono">Shell:</span>
-              <select class="dock-select" id="dock-shell">
-                <option value="bash">bash</option>
-                <option value="zsh">zsh</option>
-                <option value="pwsh">pwsh</option>
-              </select>
-            </div>
-            <button class="btn-dock-tool" id="btn-clear-terminal" title="Clear Terminal Output">
-              <i class="ri-delete-bin-line"></i> <span>Clear</span>
-            </button>
-            <button class="btn-dock-tool" id="btn-max-dock" title="Maximize / Restore Dock">
-              <i class="ri-fullscreen-line" id="dock-max-icon"></i> <span>Maximize</span>
-            </button>
-            <button class="btn-dock-tool" id="btn-toggle-dock" title="Minimize / Expand Dock">
-              <i class="ri-arrow-down-s-line" id="dock-toggle-icon"></i>
-            </button>
-          </div>
-        </div>
-        <div class="dock-body" id="dock-content">
-          <!-- Terminal & CI checks injected dynamically -->
-        </div>
-      </section>
-
+      <main class="main-view" id="view-content"></main>
     </div>
-
   </div>
 
-  <!-- Developer Status Bar -->
   <footer class="statusbar">
     <div class="statusbar-left">
-      <div class="status-item"><i class="ri-git-branch-line" style="color: var(--accent-blue);"></i> <span id="sb-branch">git: main</span></div>
-      <div class="status-item"><span style="color: var(--text-muted);">model:</span> <span class="status-item-highlight mono" id="sb-model">candidate-v3:v3</span></div>
-      <div class="status-item"><span style="color: var(--text-muted);">regressions:</span> <span class="status-item-highlight mono" id="sb-reg-count">5 active</span></div>
-      <div class="status-item"><span style="color: var(--text-muted);">policy:</span> <span style="color: var(--status-block);" class="mono" id="sb-policy">strict_block</span></div>
-      <div class="status-item"><span style="color: var(--text-muted);">ci_exit:</span> <span style="color: var(--status-block);" class="mono" id="sb-exit">1 (BLOCKED)</span></div>
+      <div class="status-item"><i class="ri-shield-check-line" style="color: var(--accent-blue);" aria-hidden="true"></i><span>ModelShield analysis</span></div>
+      <div class="status-item"><span style="color: var(--text-muted);">model:</span><span class="status-item-highlight mono" id="sb-model">unavailable</span></div>
+      <div class="status-item"><span style="color: var(--text-muted);">replays:</span><span class="status-item-highlight mono" id="sb-reg-count">unavailable</span></div>
+      <div class="status-item"><span style="color: var(--text-muted);">decision:</span><span class="mono" id="sb-policy">unavailable</span></div>
     </div>
-    <div class="statusbar-right">
-      <div class="status-item"><span style="color: var(--text-muted);">Schema:</span> <span class="mono">v1.0</span></div>
-      <div class="status-item"><span class="mono">UTF-8</span></div>
-      <div class="status-item"><span class="mono">Ln 1, Col 1</span></div>
-      <div class="status-item" style="color: var(--status-pass);"><i class="ri-check-line"></i> <span>No Issues</span></div>
-    </div>
+    <div class="statusbar-right"><div class="status-item"><span>Evidence status appears after analysis.</span></div></div>
   </footer>
-
   <script type="module" src="app.js"></script>
 </body>
 </html>
