@@ -45,6 +45,12 @@ class TorchvisionModelAdapter(ModelAdapter):
         self.checkpoint_path = self.normalize_path(checkpoint_path)
         self.device = torch.device(device)
         self.strict = strict
+        self._class_names: tuple[str, ...] | None = None
+
+    @property
+    def class_names(self) -> tuple[str, ...] | None:
+        """Ordered class semantics read from a new-format checkpoint, if present."""
+        return self._class_names
 
     @classmethod
     def supported_architectures(cls) -> tuple[str, ...]:
@@ -117,6 +123,9 @@ class TorchvisionModelAdapter(ModelAdapter):
         except Exception as exc:
             raise CheckpointLoadError(f"unable to read checkpoint '{path}': {exc}") from exc
         state_dict = self._normalize_checkpoint(checkpoint)
+        metadata = checkpoint.get("metadata") if isinstance(checkpoint, Mapping) else None
+        if isinstance(metadata, Mapping) and isinstance(metadata.get("class_names"), list) and all(isinstance(name, str) for name in metadata["class_names"]):
+            self._class_names = tuple(metadata["class_names"])
         try:
             model.load_state_dict(state_dict, strict=self.strict)
         except RuntimeError as exc:
