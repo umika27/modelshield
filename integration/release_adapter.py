@@ -143,7 +143,13 @@ class ReleaseDecisionAdapter:
         self.threshold_fraction = float(threshold_fraction)
         self.review_margin = float(review_margin)
 
-    def decide(self, evidence: Iterable[ReleaseEvidence]) -> ReleaseDecision:
+    def decide(
+        self,
+        evidence: Iterable[ReleaseEvidence],
+        *,
+        candidate: ModelIdentity | None = None,
+        baseline: ModelIdentity | None = None,
+    ) -> ReleaseDecision:
         """Return a stable PASS/REVIEW/BLOCK verdict from verified failures.
 
         The first evidence item establishes the compared candidate and
@@ -152,7 +158,7 @@ class ReleaseDecisionAdapter:
         """
         items = list(evidence)
         if not items:
-            return self._empty_decision()
+            return self._empty_decision(candidate=candidate, baseline=baseline)
 
         candidate = items[0].candidate
         baseline = items[0].baseline
@@ -230,7 +236,7 @@ class ReleaseDecisionAdapter:
         )
 
     @staticmethod
-    def _empty_decision() -> ReleaseDecision:
+    def _empty_decision(*, candidate: ModelIdentity | None, baseline: ModelIdentity | None) -> ReleaseDecision:
         unknown = ModelIdentity(model_id="", name="", version="")
         return ReleaseDecision(
             verdict=ReleaseVerdict.PASS,
@@ -239,8 +245,8 @@ class ReleaseDecisionAdapter:
             verified_failures=0,
             highest_severity=None,
             triggering_failure_fingerprints=(),
-            candidate=unknown,
-            baseline=unknown,
+            candidate=candidate or unknown,
+            baseline=baseline or unknown,
             findings=(),
         )
 
