@@ -91,8 +91,8 @@
         </div>
 
         <!-- Form Heading & Subtitle -->
-        <h1 class="auth-title">Sign in</h1>
-        <p class="auth-subtitle">Access your ModelShield workspace.</p>
+        <h1 class="auth-title" id="auth-title">Sign in</h1>
+        <p class="auth-subtitle" id="auth-subtitle">Access your ModelShield workspace.</p>
 
         <!-- Dynamic Status Message -->
         <div class="auth-status-box" id="auth-status-msg" role="alert"></div>
@@ -125,6 +125,20 @@
             </button>
           </div>
 
+          <!-- Re-enter / Confirm Password Field (Only in Create Account mode) -->
+          <div class="form-field password-field" id="confirm-password-group" style="display: none;">
+            <input 
+              type="password" 
+              id="auth-confirm-password" 
+              class="auth-input" 
+              placeholder="Re-enter password" 
+              autocomplete="new-password" 
+            />
+            <button type="button" class="btn-toggle-password" id="toggle-confirm-password-btn" aria-label="Toggle confirm password visibility" title="Toggle visibility">
+              <i class="ri-eye-off-line" id="confirm-password-eye-icon"></i>
+            </button>
+          </div>
+
           <!-- Inline Error Message Display -->
           <div class="auth-error-text" id="auth-error-msg" role="alert"></div>
 
@@ -136,14 +150,39 @@
 
         <!-- Secondary Actions -->
         <div class="auth-secondary-actions">
-          <a href="#" class="auth-sub-link" id="forgot-password-link">Forgot password?</a>
+          <div class="auth-secondary-links">
+            <a href="#" class="auth-sub-link" id="forgot-password-link">Forgot password?</a>
+          </div>
+          <div class="auth-switch-prompt" id="auth-switch-prompt">
+            <span id="switch-prompt-text">Don't have an account?</span>
+            <a href="#" class="auth-highlight-link" id="toggle-auth-mode">Create account</a>
+          </div>
         </div>
 
       </div>
 
     </section>
 
-  </main>
+  <!-- Workspace Initialization Loader Overlay (Triggered upon Sign In) -->
+  <div class="workspace-loader-overlay" id="workspace-loader" role="status" aria-live="polite">
+    <div class="workspace-loader-content">
+      <div class="workspace-loader-agent">
+        <img src="agents/gif/idle.gif" alt="Workspace Initialization Agent" class="loader-agent-gif" onerror="if(!this.src.includes('agents_gif')) this.src='agents_gif/idle.gif';" />
+      </div>
+      <div class="workspace-loader-title" id="loader-title">Initializing workspace</div>
+      <div class="workspace-loader-status mono" id="loader-status">Preparing neural verification environment</div>
+      <div class="workspace-loader-progress-track">
+        <div class="workspace-loader-progress-fill" id="loader-progress-fill"></div>
+      </div>
+      
+      <!-- Rare Developer Shortcut Ticker -->
+      <div class="loader-shortcut-ticker mono" id="loader-shortcut-ticker">
+        <span class="ticker-label">RARE DEV TIP:</span>
+        <span class="key-badge" id="ticker-key">ctrl + shift + \</span>
+        <span class="ticker-desc" id="ticker-desc">Jump to matching bracket</span>
+      </div>
+    </div>
+  </div>
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
@@ -154,16 +193,33 @@
         password: "modelshield123"
       };
 
+      // Current Auth Mode: 'signin' | 'signup'
+      let authMode = "signin";
+
       const authForm = document.getElementById("auth-form");
+      const authTitle = document.getElementById("auth-title");
+      const authSubtitle = document.getElementById("auth-subtitle");
       const emailInput = document.getElementById("auth-email");
       const passwordInput = document.getElementById("auth-password");
+      const confirmPasswordGroup = document.getElementById("confirm-password-group");
+      const confirmPasswordInput = document.getElementById("auth-confirm-password");
       const togglePasswordBtn = document.getElementById("toggle-password-btn");
+      const toggleConfirmPasswordBtn = document.getElementById("toggle-confirm-password-btn");
       const eyeIcon = document.getElementById("password-eye-icon");
+      const confirmEyeIcon = document.getElementById("confirm-password-eye-icon");
       const submitBtn = document.getElementById("auth-submit-btn");
       const submitLabel = document.getElementById("btn-submit-label");
       const errorMsg = document.getElementById("auth-error-msg");
       const statusBox = document.getElementById("auth-status-msg");
       const forgotPasswordLink = document.getElementById("forgot-password-link");
+      const toggleAuthModeBtn = document.getElementById("toggle-auth-mode");
+      const switchPromptText = document.getElementById("switch-prompt-text");
+
+      // Loader Elements
+      const loader = document.getElementById("workspace-loader");
+      const loaderFill = document.getElementById("loader-progress-fill");
+      const loaderTitle = document.getElementById("loader-title");
+      const loaderStatus = document.getElementById("loader-status");
 
       // Clear inline error and input highlight when user types
       const clearError = () => {
@@ -173,11 +229,45 @@
         }
         if (emailInput) emailInput.classList.remove("input-error");
         if (passwordInput) passwordInput.classList.remove("input-error");
+        if (confirmPasswordInput) confirmPasswordInput.classList.remove("input-error");
         if (statusBox) statusBox.style.display = "none";
       };
 
       if (emailInput) emailInput.addEventListener("input", clearError);
       if (passwordInput) passwordInput.addEventListener("input", clearError);
+      if (confirmPasswordInput) confirmPasswordInput.addEventListener("input", clearError);
+
+      // Toggle Auth Mode (Sign In <-> Create Account)
+      if (toggleAuthModeBtn) {
+        toggleAuthModeBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          clearError();
+
+          if (authMode === "signin") {
+            authMode = "signup";
+            authTitle.textContent = "Create account";
+            authSubtitle.textContent = "Set up your ModelShield engineering workspace.";
+            submitLabel.textContent = "Create account";
+            if (confirmPasswordGroup) confirmPasswordGroup.style.display = "block";
+            if (forgotPasswordLink) forgotPasswordLink.style.display = "none";
+            switchPromptText.textContent = "Already have an account?";
+            toggleAuthModeBtn.textContent = "Sign in";
+            if (emailInput) emailInput.placeholder = "Work email or handle";
+            if (passwordInput) passwordInput.placeholder = "Create password (min 6 chars)";
+          } else {
+            authMode = "signin";
+            authTitle.textContent = "Sign in";
+            authSubtitle.textContent = "Access your ModelShield workspace.";
+            submitLabel.textContent = "Enter";
+            if (confirmPasswordGroup) confirmPasswordGroup.style.display = "none";
+            if (forgotPasswordLink) forgotPasswordLink.style.display = "inline";
+            switchPromptText.textContent = "Don't have an account?";
+            toggleAuthModeBtn.textContent = "Create account";
+            if (emailInput) emailInput.placeholder = "Email or username";
+            if (passwordInput) passwordInput.placeholder = "Password";
+          }
+        });
+      }
 
       // Cursor-Related Spotlight Hover & Click Morph
       if (submitBtn) {
@@ -204,6 +294,16 @@
         });
       }
 
+      // Toggle Confirm Password Visibility
+      if (toggleConfirmPasswordBtn && confirmPasswordInput && confirmEyeIcon) {
+        toggleConfirmPasswordBtn.addEventListener("click", () => {
+          const isPassword = confirmPasswordInput.type === "password";
+          confirmPasswordInput.type = isPassword ? "text" : "password";
+          confirmEyeIcon.className = isPassword ? "ri-eye-line" : "ri-eye-off-line";
+          toggleConfirmPasswordBtn.setAttribute("aria-label", isPassword ? "Hide confirm password" : "Show confirm password");
+        });
+      }
+
       // Forgot Password Notification
       if (forgotPasswordLink && statusBox) {
         forgotPasswordLink.addEventListener("click", (e) => {
@@ -215,7 +315,7 @@
         });
       }
 
-      // Frontend Authentication Form Submission
+      // Frontend Authentication / Account Creation Form Submission
       if (authForm) {
         authForm.addEventListener("submit", (e) => {
           e.preventDefault();
@@ -228,7 +328,7 @@
           if (!email) {
             if (emailInput) emailInput.classList.add("input-error");
             if (errorMsg) {
-              errorMsg.textContent = "Please enter your email or username.";
+              errorMsg.textContent = authMode === "signup" ? "Please enter your work email." : "Please enter your email or username.";
               errorMsg.classList.add("visible");
             }
             if (emailInput) emailInput.focus();
@@ -246,17 +346,41 @@
             return;
           }
 
-          // 3. Credential Verification (Frontend Demo)
-          const isValidIdentifier = 
-            email.toLowerCase() === DEMO_CREDENTIALS.email.toLowerCase() ||
-            email.toLowerCase() === DEMO_CREDENTIALS.username.toLowerCase();
-          
-          const isCorrectPassword = password === DEMO_CREDENTIALS.password;
+          if (authMode === "signup") {
+            // ================= CREATE ACCOUNT FLOW =================
+            if (password.length < 6) {
+              if (passwordInput) passwordInput.classList.add("input-error");
+              if (errorMsg) {
+                errorMsg.textContent = "Password must be at least 6 characters.";
+                errorMsg.classList.add("visible");
+              }
+              if (passwordInput) passwordInput.focus();
+              return;
+            }
 
-          if (isValidIdentifier && isCorrectPassword) {
-            // SUCCESS: Show subtle loading state & smoothly navigate to workspace
+            const confirmPassword = confirmPasswordInput ? confirmPasswordInput.value : "";
+            if (!confirmPassword) {
+              if (confirmPasswordInput) confirmPasswordInput.classList.add("input-error");
+              if (errorMsg) {
+                errorMsg.textContent = "Please re-enter your password.";
+                errorMsg.classList.add("visible");
+              }
+              if (confirmPasswordInput) confirmPasswordInput.focus();
+              return;
+            }
+
+            if (password !== confirmPassword) {
+              if (confirmPasswordInput) confirmPasswordInput.classList.add("input-error");
+              if (errorMsg) {
+                errorMsg.textContent = "Passwords do not match.";
+                errorMsg.classList.add("visible");
+              }
+              if (confirmPasswordInput) confirmPasswordInput.focus();
+              return;
+            }
+
             submitBtn.disabled = true;
-            submitLabel.textContent = "Signing in...";
+            submitLabel.textContent = "Setting up account...";
 
             try {
               localStorage.setItem("modelshield_auth", "true");
@@ -264,23 +388,96 @@
               sessionStorage.setItem("modelshield_authenticated", "true");
             } catch (err) {}
 
-            // Smooth transition to existing workspace route
-            setTimeout(() => {
-              window.location.href = "dashboard/index.html";
-            }, 450);
+            // Display Workspace Loader Screen
+            if (loader && loaderFill && loaderStatus) {
+              if (loaderTitle) loaderTitle.textContent = "Provisioning new workspace";
+              loader.classList.add("active");
+
+              setTimeout(() => { 
+                loaderFill.style.width = "38%"; 
+                loaderStatus.textContent = "Generating cryptographic tenant keys"; 
+              }, 350);
+
+              setTimeout(() => { 
+                loaderFill.style.width = "78%"; 
+                loaderStatus.textContent = "Assembling neural verification pipeline"; 
+              }, 1100);
+
+              setTimeout(() => { 
+                loaderFill.style.width = "100%"; 
+                loaderStatus.textContent = "Welcome to ModelShield..."; 
+              }, 1850);
+
+              setTimeout(() => {
+                window.location.href = "dashboard/index.html";
+              }, 2250);
+            } else {
+              setTimeout(() => {
+                window.location.href = "dashboard/index.html";
+              }, 400);
+            }
 
           } else {
-            // ERROR: Show inline error & subtle input error border without navigating
-            if (emailInput) emailInput.classList.add("input-error");
-            if (passwordInput) passwordInput.classList.add("input-error");
+            // ================= SIGN IN FLOW =================
+            const isValidIdentifier = 
+              email.toLowerCase() === DEMO_CREDENTIALS.email.toLowerCase() ||
+              email.toLowerCase() === DEMO_CREDENTIALS.username.toLowerCase();
             
-            if (errorMsg) {
-              errorMsg.textContent = "Invalid email or password.";
-              errorMsg.classList.add("visible");
+            const isCorrectPassword = password === DEMO_CREDENTIALS.password;
+
+            if (isValidIdentifier && isCorrectPassword) {
+              // SUCCESS: Show subtle loading state & launch workspace loader overlay
+              submitBtn.disabled = true;
+              submitLabel.textContent = "Signing in...";
+
+              try {
+                localStorage.setItem("modelshield_auth", "true");
+                localStorage.setItem("modelshield_user", email);
+                sessionStorage.setItem("modelshield_authenticated", "true");
+              } catch (err) {}
+
+              // Display the Workspace Loader Screen
+              if (loader && loaderFill && loaderStatus) {
+                if (loaderTitle) loaderTitle.textContent = "Initializing workspace";
+                loader.classList.add("active");
+
+                setTimeout(() => { 
+                  loaderFill.style.width = "38%"; 
+                  loaderStatus.textContent = "Loading candidate model weight matrices"; 
+                }, 350);
+
+                setTimeout(() => { 
+                  loaderFill.style.width = "78%"; 
+                  loaderStatus.textContent = "Restoring workbench state & security gates"; 
+                }, 1100);
+
+                setTimeout(() => { 
+                  loaderFill.style.width = "100%"; 
+                  loaderStatus.textContent = "Entering developer workspace..."; 
+                }, 1850);
+
+                setTimeout(() => {
+                  window.location.href = "dashboard/index.html";
+                }, 2250);
+              } else {
+                setTimeout(() => {
+                  window.location.href = "dashboard/index.html";
+                }, 400);
+              }
+
+            } else {
+              // ERROR: Show inline error & subtle input error border without navigating
+              if (emailInput) emailInput.classList.add("input-error");
+              if (passwordInput) passwordInput.classList.add("input-error");
+              
+              if (errorMsg) {
+                errorMsg.textContent = "Invalid email or password.";
+                errorMsg.classList.add("visible");
+              }
+              
+              submitBtn.classList.remove("btn-clicked");
+              if (passwordInput) passwordInput.focus();
             }
-            
-            submitBtn.classList.remove("btn-clicked");
-            if (passwordInput) passwordInput.focus();
           }
         });
       }

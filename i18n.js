@@ -614,6 +614,78 @@ function initGlobalButtonSpotlight() {
   });
 }
 
+function initRandomFooterMascot() {
+  const mascotImg = document.querySelector(".footer-agent-emoji");
+  if (!mascotImg) return;
+
+  const gifs = [
+    "landing.gif",
+    "idle.gif",
+    "analyse.gif",
+    "defence.gif",
+    "reward.gif",
+    "attack.gif"
+  ];
+
+  const randomGif = gifs[Math.floor(Math.random() * gifs.length)];
+  const isSubpage = window.location.pathname.includes("/pages/") || (typeof document !== "undefined" && document.querySelector('link[href*="subpage.css"]') !== null);
+  const basePath = isSubpage ? "../agents/gif/" : "agents/gif/";
+  const fallbackPath = isSubpage ? "../agents_gif/" : "agents_gif/";
+
+  mascotImg.src = `${basePath}${randomGif}`;
+  mascotImg.onerror = function() {
+    if (!this.src.includes("agents_gif")) {
+      this.src = `${fallbackPath}${randomGif}`;
+    }
+  };
+
+  // Interactive Easter Egg: click to roll another agent
+  mascotImg.addEventListener("click", () => {
+    const nextGif = gifs[Math.floor(Math.random() * gifs.length)];
+    mascotImg.src = `${basePath}${nextGif}`;
+    mascotImg.style.transform = "scale(1.25) rotate(12deg)";
+    setTimeout(() => {
+      mascotImg.style.transform = "";
+    }, 250);
+  });
+}
+
+function initScrollHeader() {
+  if (typeof window === "undefined") return;
+
+  let lastScrollY = window.pageYOffset || document.documentElement.scrollTop || 0;
+  let ticking = false;
+
+  window.addEventListener("scroll", () => {
+    if (!ticking) {
+      window.requestAnimationFrame(() => {
+        const currentScrollY = window.pageYOffset || document.documentElement.scrollTop || 0;
+        const nav = document.querySelector(".landing-nav") || document.querySelector(".subpage-nav");
+        
+        if (nav) {
+          if (currentScrollY <= 20) {
+            // At very top
+            nav.classList.remove("is-hidden");
+            nav.classList.remove("is-scrolled");
+          } else if (currentScrollY > lastScrollY && currentScrollY > 80) {
+            // Scrolling DOWN - hide
+            nav.classList.add("is-hidden");
+            nav.classList.add("is-scrolled");
+          } else if (currentScrollY < lastScrollY) {
+            // Scrolling UP - reveal header smoothly
+            nav.classList.remove("is-hidden");
+            nav.classList.add("is-scrolled");
+          }
+        }
+
+        lastScrollY = Math.max(0, currentScrollY);
+        ticking = false;
+      });
+      ticking = true;
+    }
+  }, { passive: true });
+}
+
 function initLanguageEngine() {
   const savedLang = (typeof localStorage !== "undefined" && localStorage.getItem("modelshield_lang")) || "en";
   
@@ -629,6 +701,8 @@ function initLanguageEngine() {
 
   setLanguage(savedLang);
   initGlobalButtonSpotlight();
+  initRandomFooterMascot();
+  initScrollHeader();
 }
 
 // Auto-run when DOM is ready in browser

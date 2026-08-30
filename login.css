@@ -31,6 +31,17 @@
   box-sizing: border-box;
 }
 
+/* Custom Text Selection Highlight (Translucent Neutral / Dark Aesthetic) */
+::selection {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+}
+
+::-moz-selection {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+}
+
 html, body {
   width: 100%;
   height: 100%;
@@ -444,21 +455,60 @@ html, body {
   transform: none;
 }
 
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
 /* Secondary Actions */
 .auth-secondary-actions {
   text-align: center;
-  margin-top: 1.5rem;
+  margin-top: 1.6rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.auth-secondary-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .auth-sub-link {
-  font-size: 0.8rem;
-  color: var(--text-muted);
+  font-size: 0.82rem;
+  color: #64748b;
   text-decoration: none;
   transition: color 0.2s ease;
+  cursor: pointer;
 }
 
 .auth-sub-link:hover {
-  color: var(--text-bright);
+  color: #f8fafc;
+}
+
+.auth-switch-prompt {
+  font-size: 0.82rem;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.auth-highlight-link {
+  color: #f8fafc;
+  text-decoration: none;
+  font-weight: 500;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+  transition: color 0.2s ease, border-color 0.2s ease;
+  cursor: pointer;
+}
+
+.auth-highlight-link:hover {
+  color: #ffffff;
+  border-bottom-color: #ffffff;
 }
 
 /* Feedback Status Alert */
@@ -523,3 +573,139 @@ html, body {
     right: 2rem;
   }
 }
+
+/* ==========================================================================
+   Workspace Initialization Loader Overlay (Triggered upon Sign In)
+   ========================================================================== */
+.workspace-loader-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: #05070b;
+  z-index: 999999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-main);
+  font-family: var(--font-sans);
+  user-select: none;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.workspace-loader-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.workspace-loader-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  max-width: 480px;
+  padding: 32px;
+  animation: loaderContentFade 0.4s ease forwards;
+}
+
+@keyframes loaderContentFade {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.workspace-loader-agent {
+  height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.loader-agent-gif {
+  height: 130px;
+  width: auto;
+  object-fit: contain;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.8)) drop-shadow(0 0 25px rgba(56, 189, 248, 0.2));
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Ctext y='24' font-size='24'%3E%F0%9F%8D%8C%3C/text%3E%3C/svg%3E") 16 16, pointer !important;
+}
+
+.workspace-loader-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-bright);
+  letter-spacing: 0.3px;
+  margin-bottom: 6px;
+}
+
+.workspace-loader-status {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  margin-bottom: 20px;
+  min-height: 18px;
+}
+
+.workspace-loader-progress-track {
+  width: 240px;
+  height: 3px;
+  background-color: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+}
+
+.workspace-loader-progress-fill {
+  height: 100%;
+  width: 0%;
+  background-color: var(--accent-cyan, #38bdf8);
+  border-radius: 1px;
+  transition: width 0.15s linear;
+}
+
+.loader-shortcut-ticker {
+  margin-top: 22px;
+  font-size: 11px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-subtle);
+  max-width: 460px;
+  user-select: none;
+}
+
+.ticker-label {
+  font-weight: 700;
+  color: var(--accent-cyan, #38bdf8);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.key-badge {
+  background: #0d121c;
+  border: 1px solid var(--border-medium);
+  color: var(--text-bright);
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  white-space: nowrap;
+}
+
+.ticker-desc {
+  color: var(--text-main);
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+

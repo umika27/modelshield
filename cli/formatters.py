@@ -7,6 +7,18 @@ from __future__ import annotations
 import sys
 from typing import Any, Dict, List, Optional
 
+# Ensure UTF-8 output on modern terminals if possible
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+if hasattr(sys.stderr, "reconfigure"):
+    try:
+        sys.stderr.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+
 # ANSI Color & Style Constants
 RESET = "\033[0m"
 BOLD = "\033[1m"
@@ -30,6 +42,29 @@ BG_GREEN = "\033[42m"
 BG_YELLOW = "\033[43m"
 
 
+def safe_print(text: str = ""):
+    """Print with fallback encoding for restrictive Windows consoles."""
+    try:
+        print(text)
+    except UnicodeEncodeError:
+        clean = (
+            text.replace("─", "-")
+            .replace("┌", "+")
+            .replace("┐", "+")
+            .replace("└", "+")
+            .replace("┘", "+")
+            .replace("│", "|")
+            .replace("✓", "v")
+            .replace("✖", "x")
+            .replace("✗", "x")
+            .replace("●", "*")
+            .replace("▲", "!")
+            .replace("—", "-")
+            .replace("→", "->")
+        )
+        print(clean)
+
+
 def colorize(text: str, color_code: str) -> str:
     """Format string with ANSI escape codes."""
     return f"{color_code}{text}{RESET}"
@@ -51,8 +86,8 @@ def badge(status: str) -> str:
 
 def print_banner():
     """Print clean ModelShield developer header."""
-    print(f"\n{BOLD}{CYAN}MODELSHIELD{RESET} {DIM}v1.0.0 — Adaptive ML Verification & Release Gating{RESET}")
-    print(f"{GRAY}───────────────────────────────────────────────────────────────────{RESET}")
+    safe_print(f"\n{BOLD}{CYAN}MODELSHIELD{RESET} {DIM}v1.0.0 — Adaptive ML Verification & Release Gating{RESET}")
+    safe_print(f"{GRAY}───────────────────────────────────────────────────────────────────{RESET}")
 
 
 def format_table(headers: List[str], rows: List[List[str]], alignments: Optional[List[str]] = None) -> str:
@@ -102,27 +137,27 @@ def format_table(headers: List[str], rows: List[List[str]], alignments: Optional
 def print_verdict_card(decision: str, summary: Dict[str, Any], reason: str, candidate_name: str):
     """Render high-visibility CI/CD verdict card."""
     dec = decision.upper()
-    print(f"\n{GRAY}┌─────────────────────────────────────────────────────────────────┐{RESET}")
+    safe_print(f"\n{GRAY}┌─────────────────────────────────────────────────────────────────┐{RESET}")
     if dec == "BLOCK":
-        print(f"{GRAY}│{RESET}  {BG_RED}{WHITE}{BOLD} ✖ RELEASE BLOCKED {RESET}  Candidate: {BOLD}{candidate_name}{RESET}")
-        print(f"{GRAY}│{RESET}  {RED}{reason}{RESET}")
+        safe_print(f"{GRAY}│{RESET}  {BG_RED}{WHITE}{BOLD} ✖ RELEASE BLOCKED {RESET}  Candidate: {BOLD}{candidate_name}{RESET}")
+        safe_print(f"{GRAY}│{RESET}  {RED}{reason}{RESET}")
     elif dec == "REVIEW":
-        print(f"{GRAY}│{RESET}  {BG_YELLOW}{WHITE}{BOLD} ▲ REVIEW REQUIRED {RESET}  Candidate: {BOLD}{candidate_name}{RESET}")
-        print(f"{GRAY}│{RESET}  {YELLOW}{reason}{RESET}")
+        safe_print(f"{GRAY}│{RESET}  {BG_YELLOW}{WHITE}{BOLD} ▲ REVIEW REQUIRED {RESET}  Candidate: {BOLD}{candidate_name}{RESET}")
+        safe_print(f"{GRAY}│{RESET}  {YELLOW}{reason}{RESET}")
     else:
-        print(f"{GRAY}│{RESET}  {BG_GREEN}{WHITE}{BOLD} ✓ RELEASE APPROVED {RESET}  Candidate: {BOLD}{candidate_name}{RESET}")
-        print(f"{GRAY}│{RESET}  {GREEN}{reason}{RESET}")
+        safe_print(f"{GRAY}│{RESET}  {BG_GREEN}{WHITE}{BOLD} ✓ RELEASE APPROVED {RESET}  Candidate: {BOLD}{candidate_name}{RESET}")
+        safe_print(f"{GRAY}│{RESET}  {GREEN}{reason}{RESET}")
 
     total = summary.get("total_regressions", 0)
     passed = summary.get("passed", 0)
     failed = summary.get("failed", 0)
     review = summary.get("review_required", 0)
 
-    print(f"{GRAY}│{RESET}")
-    print(
+    safe_print(f"{GRAY}│{RESET}")
+    safe_print(
         f"{GRAY}│{RESET}  {DIM}Total Tests:{RESET} {total}  "
         f"│  {GREEN}Passed:{RESET} {passed}  "
         f"│  {RED}Failed:{RESET} {failed}  "
         f"│  {YELLOW}Review:{RESET} {review}"
     )
-    print(f"{GRAY}└─────────────────────────────────────────────────────────────────┘{RESET}\n")
+    safe_print(f"{GRAY}└─────────────────────────────────────────────────────────────────┘{RESET}\n")

@@ -3,13 +3,23 @@ Clean developer CLI inspired by GitHub CLI, Docker CLI, and VS Code.
 """
 from __future__ import annotations
 
+from typing import Optional
 import typer
 
+from cli import __version__
 from cli.commands.failures import app as failures_app
 from cli.commands.regression import app as regression_app
 from cli.commands.replay import replay_command
+from cli.commands.scan import scan_command
 from cli.commands.test import test_command
 from cli.formatters import BOLD, CYAN, DIM, GRAY, RESET, print_banner
+
+
+def version_callback(value: bool):
+    if value:
+        print(f"modelshield version {__version__}")
+        raise typer.Exit()
+
 
 app = typer.Typer(
     name="modelshield",
@@ -17,11 +27,34 @@ app = typer.Typer(
     no_args_is_help=True,
 )
 
+
+@app.callback()
+def main_callback(
+    version: Optional[bool] = typer.Option(
+        None,
+        "--version",
+        "-V",
+        help="Show ModelShield version and exit.",
+        callback=version_callback,
+        is_eager=True,
+    ),
+):
+    """ModelShield Root CLI."""
+    pass
+
+
 # Register top-level commands and groups
+app.command("scan", help="Scan and verify ML model weights & packaging safety.")(scan_command)
 app.command("test", help="Run verification & challenge tests on a candidate model.")(test_command)
 app.command("replay", help="Deterministically replay a verified failure test.")(replay_command)
 app.add_typer(failures_app, name="failures")
 app.add_typer(regression_app, name="regression")
+
+
+@app.command("version")
+def version_command():
+    """Print ModelShield version information."""
+    print(f"modelshield version {__version__}")
 
 
 @app.command("info")
@@ -35,10 +68,11 @@ def info_command():
     print(f"  {CYAN}REMEMBER{RESET}   → Compile verified failures into active regression tests")
     print(f"  {CYAN}PROTECT{RESET}    → Gate releases and block regressions in CI/CD\n")
     print(f"{BOLD}Quick Commands:{RESET}")
-    print(f"  {DIM}$ modelshield test{RESET}              # Run candidate vs baseline comparison")
-    print(f"  {DIM}$ modelshield failures list{RESET}     # View stored failure memories")
-    print(f"  {DIM}$ modelshield regression run{RESET}    # Run regression suite & gate release")
-    print(f"  {DIM}$ modelshield replay <id>{RESET}       # Deterministically replay a test\n")
+    print(f"  {DIM}$ modelshield scan model.pkl{RESET}       # Verify weights, integrity, security & policy")
+    print(f"  {DIM}$ modelshield test{RESET}                # Run candidate vs baseline comparison")
+    print(f"  {DIM}$ modelshield failures list{RESET}       # View stored failure memories")
+    print(f"  {DIM}$ modelshield regression run{RESET}      # Run regression suite & gate release")
+    print(f"  {DIM}$ modelshield replay <id>{RESET}         # Deterministically replay a test\n")
 
 
 def main():

@@ -52,3 +52,5 @@ dist/
 # Temporary
 *.tmp
 *.temp
+build/
+*.egg-info/

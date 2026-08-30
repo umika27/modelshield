@@ -155,6 +155,44 @@ function initPhasedHeroSequence() {
 }
 
 function initWorkspaceNavigationGuards() {
+  // 1. Sign In -> Login Page Loader Sequence
+  const signInLinks = document.querySelectorAll('a[href*="login.html"]');
+  const loader = document.getElementById("workspace-loader");
+  const loaderFill = document.getElementById("loader-progress-fill");
+  const loaderStatus = document.getElementById("loader-status");
+
+  signInLinks.forEach(link => {
+    link.addEventListener("click", (e) => {
+      e.preventDefault();
+
+      if (loader && loaderFill && loaderStatus) {
+        loader.classList.add("active");
+
+        setTimeout(() => {
+          loaderFill.style.width = "40%";
+          loaderStatus.textContent = "Loading cryptographic keys & session handshake";
+        }, 300);
+
+        setTimeout(() => {
+          loaderFill.style.width = "85%";
+          loaderStatus.textContent = "Preparing authentication portal";
+        }, 800);
+
+        setTimeout(() => {
+          loaderFill.style.width = "100%";
+          loaderStatus.textContent = "Opening authentication portal...";
+        }, 1300);
+
+        setTimeout(() => {
+          window.location.href = link.getAttribute("href") || "login.html";
+        }, 1600);
+      } else {
+        window.location.href = link.getAttribute("href") || "login.html";
+      }
+    });
+  });
+
+  // 2. Direct Go to Workspace Links
   const workspaceLinks = document.querySelectorAll('a[href*="dashboard/index.html"]');
   workspaceLinks.forEach(link => {
     link.addEventListener("click", (e) => {

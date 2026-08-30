@@ -39,6 +39,17 @@
   padding: 0;
 }
 
+/* Custom Text Selection Highlight (Translucent Neutral / Dark Aesthetic) */
+::selection {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+}
+
+::-moz-selection {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+}
+
 html {
   background-color: var(--bg-deep);
   color: var(--text-main);

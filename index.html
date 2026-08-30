@@ -381,26 +381,30 @@
         <div class="expanded-cli-content" id="morph-cli-stream">
           <div class="cli-line cmd interactive-copy-line" data-copy="pip install modelshield" title="Click to copy command">
             <div class="line-left">
-              <span class="prm">$</span>
-              <span class="cmd-text">pip install modelshield</span>
+              <span class="syn-prompt">$</span>
+              <span class="syn-cmd">pip</span> <span class="syn-keyword">install</span> <span class="syn-pkg">modelshield</span>
             </div>
             <div class="line-right">
               <i class="ri-file-copy-line line-copy-icon"></i>
               <span class="line-copy-tooltip">Copy</span>
             </div>
           </div>
-          <div class="cli-line info">&gt; Successfully installed modelshield-1.0.0</div>
+          <div class="cli-line info">
+            <span class="syn-prompt">&gt;</span> <span class="syn-output">Successfully installed</span> <span class="syn-version">modelshield-1.0.0</span>
+          </div>
           <div class="cli-line cmd interactive-copy-line" data-copy="modelshield scan resnet50-v3.pkl" title="Click to copy command">
             <div class="line-left">
-              <span class="prm">$</span>
-              <span class="cmd-text">modelshield scan resnet50-v3.pkl</span>
+              <span class="syn-prompt">$</span>
+              <span class="syn-cmd">modelshield</span> <span class="syn-keyword">scan</span> <span class="syn-file">resnet50-v3.pkl</span>
             </div>
             <div class="line-right">
               <i class="ri-file-copy-line line-copy-icon"></i>
               <span class="line-copy-tooltip">Copy</span>
             </div>
           </div>
-          <div class="cli-line deploy-ready color-emerald">&gt;&gt; VERIFIED — RELEASE APPROVED</div>
+          <div class="cli-line deploy-ready">
+            <span class="syn-success-symbol">&gt;&gt;</span> <span class="syn-success-bold">VERIFIED</span> <span class="syn-success-dash">—</span> <span class="syn-success-text">RELEASE APPROVED</span>
+          </div>
         </div>
 
         <div class="expanded-cli-actions">
@@ -425,6 +429,7 @@
               <i class="ri-shield-keyhole-line"></i>
             </div>
             <span class="brand-text">ModelShield</span>
+            <img src="agents/gif/landing.gif" alt="ModelShield Mascot" class="footer-agent-emoji" onerror="if(!this.src.includes('agents_gif')) this.src='agents_gif/landing.gif';" title="ModelShield Mascot" />
           </div>
           <p class="footer-tagline" data-i18n="footer.tagline">
             Security &amp; ML Regression Protection Infrastructure for Artificial Intelligence Models.
@@ -510,7 +515,29 @@
     </div>
   </footer>
 
+  <!-- Workspace Initialization Loader Overlay (Triggered upon Sign In Navigation) -->
+  <div class="workspace-loader-overlay" id="workspace-loader" role="status" aria-live="polite">
+    <div class="workspace-loader-content">
+      <div class="workspace-loader-agent">
+        <img src="agents/gif/idle.gif" alt="Workspace Initialization Agent" class="loader-agent-gif" onerror="if(!this.src.includes('agents_gif')) this.src='agents_gif/idle.gif';" />
+      </div>
+      <div class="workspace-loader-title" id="loader-title">Initializing authentication</div>
+      <div class="workspace-loader-status mono" id="loader-status">Securing cryptographic session &amp; preparing workspace</div>
+      <div class="workspace-loader-progress-track">
+        <div class="workspace-loader-progress-fill" id="loader-progress-fill"></div>
+      </div>
+      
+      <!-- Rare Developer Shortcut Ticker -->
+      <div class="loader-shortcut-ticker mono" id="loader-shortcut-ticker">
+        <span class="ticker-label">RARE DEV TIP:</span>
+        <span class="key-badge" id="ticker-key">ctrl + shift + \</span>
+        <span class="ticker-desc" id="ticker-desc">Jump to matching bracket</span>
+      </div>
+    </div>
+  </div>
+
   <!-- Main JavaScript Engine -->
+  <script src="i18n.js"></script>
   <script src="landing.js"></script>
 </body>
 </html>

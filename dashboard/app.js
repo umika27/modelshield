@@ -127,6 +127,18 @@ function setupToolbarControls() {
   if (btnRunGate) {
     btnRunGate.addEventListener("click", runReleaseGateWorkflow);
   }
+
+  const btnExport = document.querySelector(".btn-crumb-action[title='Export artifacts']");
+  if (btnExport) {
+    btnExport.addEventListener("click", () => {
+      const a = document.createElement("a");
+      a.href = "dist/modelshield-1.0.0-py3-none-any.whl";
+      a.download = "modelshield-1.0.0-py3-none-any.whl";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    });
+  }
 }
 
 function setupBottomDock() {
@@ -316,11 +328,191 @@ function renderCurrentView() {
     case "gate":
       renderReleaseGate(container);
       break;
+    case "artifacts":
+      renderArtifacts(container);
+      break;
+    case "integrations":
+      renderIntegrations(container);
+      break;
     default:
       renderPlaceholderView(container, currentView);
       break;
   }
 }
+
+function renderArtifacts(container) {
+  const candidate = dashboardState.getSelectedCandidate();
+
+  container.innerHTML = `
+    <div class="view-header">
+      <div class="view-title"><i class="ri-box-3-line"></i> Release Artifacts & CLI Downloads</div>
+      <div class="view-subtitle">Download packaged ModelShield CLI binaries, wheel packages, and model evaluation contracts</div>
+    </div>
+
+    <!-- ModelShield CLI Download Box -->
+    <div class="cli-download-card">
+      <div class="cli-card-header">
+        <div class="cli-title-group">
+          <i class="ri-terminal-box-line cli-icon"></i>
+          <div>
+            <div class="cli-name">ModelShield CLI <span class="cli-version-badge mono">v1.0.0</span></div>
+            <div class="cli-desc">Run model verification locally or inside your CI/CD pipeline.</div>
+          </div>
+        </div>
+        <div class="cli-actions">
+          <a href="dist/modelshield-1.0.0-py3-none-any.whl" download="modelshield-1.0.0-py3-none-any.whl" class="btn-topbar-primary" id="btn-download-cli-whl">
+            <i class="ri-download-2-line"></i> <span>Download CLI</span>
+          </a>
+          <a href="dist/modelshield-1.0.0.tar.gz" download="modelshield-1.0.0.tar.gz" class="btn-topbar-secondary" id="btn-download-cli-tar">
+            <i class="ri-file-zip-line"></i> <span>Source (.tar.gz)</span>
+          </a>
+        </div>
+      </div>
+      <div class="cli-code-snippet">
+        <div class="snippet-header">
+          <span class="mono">Terminal Installation & Execution</span>
+          <button class="btn-copy-code" onclick="navigator.clipboard.writeText('pip install modelshield\\nmodelshield scan model.pkl'); this.textContent='Copied!'; setTimeout(() => this.textContent='Copy', 2000)">Copy</button>
+        </div>
+        <pre class="mono snippet-pre"><code><span class="cm">$</span> pip install modelshield
+<span class="cm">$</span> modelshield scan model.pkl</code></pre>
+      </div>
+    </div>
+
+    <!-- Artifacts Table -->
+    <div class="view-header" style="margin-top: 24px; margin-bottom: 12px;">
+      <div class="view-title" style="font-size: 13px;"><i class="ri-folder-zip-line"></i> Verified Build Packages & Contracts</div>
+    </div>
+
+    <div class="table-container">
+      <table class="ide-table">
+        <thead>
+          <tr>
+            <th>Artifact Name</th>
+            <th>Type</th>
+            <th>Version / Target</th>
+            <th>Size / Format</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong class="mono" style="color: var(--accent-blue);">modelshield-1.0.0-py3-none-any.whl</strong></td>
+            <td><span class="mono">Python Wheel</span></td>
+            <td><span class="mono">v1.0.0 (py3)</span></td>
+            <td><span class="mono">33.8 KB</span></td>
+            <td>${createStatusBadge('VERIFIED')}</td>
+            <td>
+              <a href="dist/modelshield-1.0.0-py3-none-any.whl" download="modelshield-1.0.0-py3-none-any.whl" class="btn-topbar-secondary" style="padding: 2px 8px; font-size: 11px; text-decoration: none;">
+                <i class="ri-download-line"></i> Download
+              </a>
+            </td>
+          </tr>
+          <tr>
+            <td><strong class="mono" style="color: var(--accent-blue);">modelshield-1.0.0.tar.gz</strong></td>
+            <td><span class="mono">Source Dist</span></td>
+            <td><span class="mono">v1.0.0 (sdist)</span></td>
+            <td><span class="mono">15.2 KB</span></td>
+            <td>${createStatusBadge('VERIFIED')}</td>
+            <td>
+              <a href="dist/modelshield-1.0.0.tar.gz" download="modelshield-1.0.0.tar.gz" class="btn-topbar-secondary" style="padding: 2px 8px; font-size: 11px; text-decoration: none;">
+                <i class="ri-download-line"></i> Download
+              </a>
+            </td>
+          </tr>
+          <tr>
+            <td><strong class="mono">release_decision_${candidate}.json</strong></td>
+            <td><span class="mono">Decision Contract</span></td>
+            <td><span class="mono">${candidate}</span></td>
+            <td><span class="mono">JSON Schema v1.0</span></td>
+            <td>${createStatusBadge('PASSED')}</td>
+            <td>
+              <button class="btn-topbar-secondary" onclick="window.downloadDecisionJson('${candidate}')" style="padding: 2px 8px; font-size: 11px;">
+                <i class="ri-download-line"></i> Export
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function renderIntegrations(container) {
+  container.innerHTML = `
+    <div class="view-header">
+      <div class="view-title"><i class="ri-plug-line"></i> Developer Integrations</div>
+      <div class="view-subtitle">Connect ModelShield into local terminals, CI/CD runners, and automated gating workflows</div>
+    </div>
+
+    <!-- CLI Integration Card -->
+    <div class="cli-download-card">
+      <div class="cli-card-header">
+        <div class="cli-title-group">
+          <i class="ri-terminal-box-line cli-icon"></i>
+          <div>
+            <div class="cli-name">ModelShield CLI <span class="cli-version-badge mono">v1.0.0</span></div>
+            <div class="cli-desc">Run model verification locally or inside your CI/CD pipeline.</div>
+          </div>
+        </div>
+        <div class="cli-actions">
+          <a href="dist/modelshield-1.0.0-py3-none-any.whl" download="modelshield-1.0.0-py3-none-any.whl" class="btn-topbar-primary" style="text-decoration: none;">
+            <i class="ri-download-2-line"></i> <span>Download CLI</span>
+          </a>
+        </div>
+      </div>
+      <div class="cli-code-snippet">
+        <div class="snippet-header">
+          <span class="mono">Local Terminal Scan</span>
+          <button class="btn-copy-code" onclick="navigator.clipboard.writeText('pip install modelshield\\nmodelshield scan model.pkl'); this.textContent='Copied!'; setTimeout(() => this.textContent='Copy', 2000)">Copy</button>
+        </div>
+        <pre class="mono snippet-pre"><code><span class="cm">$</span> pip install modelshield
+<span class="cm">$</span> modelshield scan model.pkl</code></pre>
+      </div>
+    </div>
+
+    <!-- CI/CD GitHub Actions Integration Card -->
+    <div class="cli-download-card">
+      <div class="cli-card-header">
+        <div class="cli-title-group">
+          <i class="ri-github-fill cli-icon"></i>
+          <div>
+            <div class="cli-name">GitHub Actions Gating Workflow</div>
+            <div class="cli-desc">Automated release gating blocking ML regressions before pull-request merge.</div>
+          </div>
+        </div>
+      </div>
+      <div class="cli-code-snippet">
+        <div class="snippet-header">
+          <span class="mono">.github/workflows/modelshield-gate.yml</span>
+          <button class="btn-copy-code" onclick="navigator.clipboard.writeText('name: ModelShield Gate\\non: [pull_request]\\njobs:\\n  gate:\\n    runs-on: ubuntu-latest\\n    steps:\\n      - uses: actions/checkout@v4\\n      - run: pip install modelshield\\n      - run: modelshield regression run --candidate candidate-v3'); this.textContent='Copied!'; setTimeout(() => this.textContent='Copy', 2000)">Copy</button>
+        </div>
+        <pre class="mono snippet-pre"><code><span class="cm">name:</span> ModelShield Gate
+<span class="cm">on:</span> [pull_request]
+<span class="cm">jobs:</span>
+  <span class="cm">gate:</span>
+    <span class="cm">runs-on:</span> ubuntu-latest
+    <span class="cm">steps:</span>
+      - uses: actions/checkout@v4
+      - run: pip install modelshield
+      - run: modelshield regression run --candidate candidate-v3</code></pre>
+      </div>
+    </div>
+  `;
+}
+
+window.downloadDecisionJson = function(candidate) {
+  const decision = dashboardState.getReleaseDecision(candidate);
+  const blob = new Blob([JSON.stringify(decision, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `release_decision_${candidate}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
 
 function renderPlaceholderView(container, viewKey) {
   const title = viewKey.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase());
