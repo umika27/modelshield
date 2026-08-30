@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS evaluations (
      status          TEXT NOT NULL CHECK (status IN ('pass', 'failure')),
     seed            INTEGER,
     owner_uid       TEXT,                  -- Firebase Auth UID that generated this run
-    created_at      TEXT DEFAULT (datetime('now'.'localtime'))
+    created_at      TEXT DEFAULT (datetime('now','localtime'))
 );
 
 -- A verified/unverified failure — the Failure Fingerprint
