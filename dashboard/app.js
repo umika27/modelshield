@@ -10,6 +10,8 @@ import { createDataTable } from "./components/table.js";
 import { createTerminalOutput } from "./components/terminal.js";
 import { createCodeInspector } from "./components/inspector.js";
 import { createDiffBar } from "./components/diffbar.js";
+import { initAgentGif } from "./components/agent_gif.js";
+import { initWorkspaceLoader } from "./components/workspace_loader.js";
 
 // UI Controller State
 let currentView = "comparison";
@@ -17,14 +19,46 @@ let currentDockTab = "terminal";
 let isDockMinimized = false;
 let isDockMaximized = false;
 let latestReplayResult = null;
+let workspaceLoader = null;
 
 document.addEventListener("DOMContentLoaded", () => {
   initTheme();
   setupNavigation();
+  setupSidebarToggle();
   setupToolbarControls();
+  setupAgentGif();
   setupBottomDock();
+  setupDockResizer();
   syncAllUI();
+  setupWorkspaceLoader();
 });
+
+function setupAgentGif() {
+  const container = document.getElementById("agent-gif-container");
+  if (container) {
+    initAgentGif(container);
+  }
+}
+
+function setupWorkspaceLoader() {
+  workspaceLoader = initWorkspaceLoader({
+    containerId: "workspace-loader",
+    onComplete: () => {
+      // Workspace initialization complete
+    }
+  });
+
+  // Check for error simulation parameter
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get("init") === "fail") {
+    workspaceLoader.start();
+    setTimeout(() => {
+      workspaceLoader.fail("Unable to load the project environment.");
+    }, 1000);
+  } else {
+    workspaceLoader.start();
+  }
+}
 
 // ----------------------------------------------------------------------------
 // Theme Switching & Persistence
@@ -141,6 +175,64 @@ function setupBottomDock() {
       }
     });
   }
+}
+
+function setupSidebarToggle() {
+  const btnToggle = document.getElementById("btn-sidebar-toggle");
+  const sidebar = document.getElementById("sidebar");
+  const icon = document.getElementById("sidebar-toggle-icon");
+
+  if (btnToggle && sidebar) {
+    btnToggle.addEventListener("click", () => {
+      sidebar.classList.toggle("collapsed");
+      const isCollapsed = sidebar.classList.contains("collapsed");
+      if (icon) {
+        icon.className = isCollapsed ? "ri-menu-unfold-line" : "ri-menu-fold-line";
+      }
+      btnToggle.title = isCollapsed ? "Expand Sidebar" : "Toggle Sidebar (Menu Bar Mode)";
+    });
+  }
+}
+
+function setupDockResizer() {
+  const handle = document.getElementById("dock-resize-handle");
+  const dock = document.getElementById("bottom-dock");
+  if (!handle || !dock) return;
+
+  let isDragging = false;
+  let startY = 0;
+  let startHeight = 0;
+
+  handle.addEventListener("mousedown", (e) => {
+    isDragging = true;
+    startY = e.clientY;
+    startHeight = dock.offsetHeight;
+    handle.classList.add("is-dragging");
+    document.body.classList.add("is-resizing-dock");
+    dock.style.transition = "none";
+  });
+
+  document.addEventListener("mousemove", (e) => {
+    if (!isDragging) return;
+    const deltaY = startY - e.clientY;
+    let newHeight = startHeight + deltaY;
+
+    const minH = 40;
+    const maxH = Math.floor(window.innerHeight * 0.75);
+    newHeight = Math.max(minH, Math.min(maxH, newHeight));
+
+    dock.style.height = `${newHeight}px`;
+  });
+
+  const stopDrag = () => {
+    if (!isDragging) return;
+    isDragging = false;
+    handle.classList.remove("is-dragging");
+    document.body.classList.remove("is-resizing-dock");
+    dock.style.transition = "height 0.15s ease";
+  };
+
+  document.addEventListener("mouseup", stopDrag);
 }
 
 function syncAllUI() {

@@ -24,97 +24,84 @@ let scrollProgress = 0;
 let currentStage = 0;
 
 // Stage Data Content Definitions
+// Stage Data Content Definitions with Per-Stage Popup Telemetry
 const STAGE_CONFIGS = [
   {
     index: 0,
     name: "STAGE 00 // HERO",
-    title: "Secure Every Model Before It Ships.",
-    desc: "ModelShield evaluates, stress-tests, and monitors AI models for security, robustness, and reproducibility.",
-    model: "resnet50-v3.pkl",
-    params: "25.6M FP16",
-    framework: "PyTorch 2.2",
-    state: "INITIALIZED",
-    stateColor: "var(--accent-cyan)",
-    cliTag: "DAEMON: LISTENING",
-    cliLines: "> Listening on tcp://127.0.0.1:8080<br>> Ready for candidate model ingestion..."
+    title: "Verify Your ML Models.",
+    popups: {
+      tl: { label: "SYSTEM_ID // RESNET50_V3", title: "NEURAL GRAPH CAPTURE" },
+      tr: { label: "SECURITY SCORE", title: "92.50 (+01.75 PASS)" },
+      bl: { label: "TENSOR WEIGHTS", title: "25.6M FP16 (OPTIMAL)" },
+      br: { label: "RELEASE_GATE // VERIFIED", title: "CLICK TO INSPECT MODEL" }
+    }
   },
   {
     index: 1,
     name: "STAGE 01 // DETECT",
-    title: "Model Detected.",
-    desc: "Candidate model weights ingested. Deconstructing tensor computational graph and verifying layer hierarchy.",
-    model: "resnet50-v3.pkl",
-    params: "25.6M FP16",
-    framework: "PyTorch 2.2",
-    state: "INGESTION COMPLETE",
-    stateColor: "var(--accent-cyan)",
-    cliTag: "STREAM: GRAPH_SYNAPSE",
-    cliLines: "> Extracting graph architecture: 50 layers<br>> Ingestion verified: 25,640,112 parameters<br>> Resolving layer activations..."
+    title: "Model Weight Ingestion.",
+    popups: {
+      tl: { label: "GRAPH_INGESTION", title: "25.6M FP16 WEIGHTS" },
+      tr: { label: "PARSER_STATUS", title: "50 LAYERS VERIFIED" },
+      bl: { label: "VRAM_ALLOCATION", title: "102.4 MB ALLOCATED" },
+      br: { label: "CHECKSUM_HASH", title: "SHA256: 42f8b... OK" }
+    }
   },
   {
     index: 2,
     name: "STAGE 02 // BUILD",
-    title: "Layer Topology Assembled.",
-    desc: "Deep neural network matrices reconstructed into 5 core computational stages with active tensor conduits.",
-    model: "resnet50-v3.pkl",
-    params: "5 Stages Active",
-    framework: "CUDA 12.1",
-    state: "TOPOLOGY MAPPED",
-    stateColor: "var(--accent-cyan)",
-    cliTag: "STREAM: TENSOR_FLOW",
-    cliLines: "> [L1] Conv2D (3x224x224 → 64)<br>> [L2] BatchNorm + ReLU activation<br>> [L3] ResBlock array (x8 Bottleneck)<br>> [L4] Dense feature mapper (2048)<br>> [L5] 1000 Class output logits"
+    title: "Neural Topology Assembly.",
+    popups: {
+      tl: { label: "CONV2D_LAYER_01", title: "3x224x224 → 64 MAPS" },
+      tr: { label: "SYNAPTIC_CONDUITS", title: "5 TENSOR STAGES ACTIVE" },
+      bl: { label: "RESBLOCK_ARRAY", title: "8 BOTTLENECK BLOCKS" },
+      br: { label: "LOGIT_HEAD", title: "1000 CLASS OUTPUTS" }
+    }
   },
   {
     index: 3,
     name: "STAGE 03 // TEST",
-    title: "Volumetric Evaluation.",
-    desc: "Luminous multi-axis scanning plane sweeping through all layers — inspecting metadata, robustness, and privacy.",
-    model: "resnet50-v3.pkl",
-    params: "4 Test Vectors",
-    framework: "Eval Engine v1",
-    state: "STRESS SCANNING",
-    stateColor: "var(--accent-cyan)",
-    cliTag: "STREAM: SCAN_VECTORS",
-    cliLines: "> Vector 1: Low Light Blur degradation<br>> Vector 2: Motion Blur perturbation<br>> Vector 3: Contrast Drop tolerance<br>> Vector 4: Membership Inference leak check"
+    title: "Volumetric Stress Scan.",
+    popups: {
+      tl: { label: "SCAN_PLANE_AXIS", title: "SWEEPING ALL LAYERS" },
+      tr: { label: "STRESS_VECTORS", title: "4 AXES EVALUATING" },
+      bl: { label: "ACCURACY_DELTA", title: "BASE: 94.2% / CAND: 92.5%" },
+      br: { label: "PRIVACY_CHECK", title: "ZERO EMBEDDING LEAKAGE" }
+    }
   },
   {
     index: 4,
     name: "STAGE 04 // ATTACK",
-    title: "Perturbation Attack.",
-    desc: "Simulating gradient-based adversarial attack vectors (FGSM/PGD). 3 potential resilience breaches detected.",
-    model: "resnet50-v3.pkl",
-    params: "3 Breaches Found",
-    framework: "Adversarial Lab",
-    state: "VULNERABILITY DETECTED",
-    stateColor: "var(--color-block)",
-    cliTag: "STREAM: THREAT_LOG",
-    cliLines: "⚠ Breach: Low Light Blur delta (-0.33)<br>⚠ Breach: Motion Blur sensitivity breach<br>⚠ Breach: Contrast Drop below threshold<br>> Generating reproducibility capsule [capsule-147]"
+    title: "Adversarial Attack Simulation.",
+    popups: {
+      tl: { label: "ATTACK_VECTOR", title: "FGSM / PGD GRADIENTS" },
+      tr: { label: "VULNERABILITY", title: "3 BREACHES FOUND" },
+      bl: { label: "DEGRADATION", title: "LOW-LIGHT DELTA -0.33" },
+      br: { label: "REPRO_CAPSULE", title: "CAPSULE #147 FROZEN" }
+    }
   },
   {
     index: 5,
     name: "STAGE 05 // SHIELD",
-    title: "Model Verified.",
-    desc: "Volumetric geometric shield forcefield forms around the model artifact, neutralizing adversarial perturbations.",
-    model: "resnet50-v3.pkl",
-    params: "Shield Active",
-    framework: "Policy Enforced",
-    state: "VERIFIED (92/100)",
-    stateColor: "var(--color-pass)",
-    cliTag: "STREAM: SECURITY_PERIMETER",
-    cliLines: "✓ Defense perimeter locked<br>✓ Strict regression gate passed<br>✓ Security Score: 92 / 100 [LOW RISK]<br>✓ Model verified for deployment"
+    title: "Security Perimeter Verification.",
+    popups: {
+      tl: { label: "SECURITY_SHIELD", title: "FORCEFIELD ACTIVE" },
+      tr: { label: "RELEASE_POLICY", title: "STRICT GATE PASSED" },
+      bl: { label: "DETERMINISM", title: "100% REPRODUCIBILITY" },
+      br: { label: "STATUS", title: "RELEASE APPROVED" }
+    }
   },
   {
     index: 6,
     name: "STAGE 06 // DEPLOY",
-    title: "Ship With Confidence.",
-    desc: "Every vulnerability neutralized, regression tests frozen, and CI/CD release gate approved.",
-    model: "resnet50-v3.pkl",
-    params: "Signed Capsule",
-    framework: "Prod Ready",
-    state: "GATE: APPROVED",
-    stateColor: "var(--color-pass)",
-    cliTag: "STREAM: DEPLOY_GATE",
-    cliLines: "$ modelshield deploy --production<br>>> Model container signed: capsule-v3.tar.gz<br>>> READY FOR PRODUCTION DEPLOYMENT"
+    title: "Install & Run.",
+    popups: {
+      tl: { label: "DEPLOYMENT", title: "PRODUCTION READY" },
+      tr: { label: "GATE_STATUS", title: "PASS (EXIT CODE 0)" },
+      bl: { label: "INSTALLATION", title: "PIP REGISTERED" },
+      br: { label: "ACTION", title: "WORKBENCH UNLOCKED" }
+    }
   }
 ];
 
@@ -130,7 +117,72 @@ document.addEventListener("DOMContentLoaded", () => {
   initCursorInteractions();
   initScrubberNavigation();
   initPolicySimulator();
+  initWorkspaceNavigationGuards();
+  initPhasedHeroSequence();
+  initPipCopyHandler();
 });
+
+function initPipCopyHandler() {
+  const pipBox = document.getElementById("pip-install-box");
+  const copyBtn = document.getElementById("pip-copy-btn");
+  const copyIcon = document.getElementById("pip-copy-icon");
+  const copyLabel = document.getElementById("pip-copy-label");
+
+  if (!pipBox) return;
+
+  const handleCopy = (e) => {
+    e.stopPropagation();
+    const commandText = "pip install modelshield";
+    navigator.clipboard.writeText(commandText).then(() => {
+      if (copyLabel) copyLabel.textContent = "Copied!";
+      if (copyIcon) copyIcon.className = "ri-check-line color-emerald";
+      setTimeout(() => {
+        if (copyLabel) copyLabel.textContent = "Copy";
+        if (copyIcon) copyIcon.className = "ri-file-copy-line";
+      }, 2000);
+    }).catch(() => {});
+  };
+
+  pipBox.addEventListener("click", handleCopy);
+  if (copyBtn) copyBtn.addEventListener("click", handleCopy);
+}
+
+function initPhasedHeroSequence() {
+  const canvas = document.getElementById("webgl-canvas");
+  const heroTop = document.getElementById("hero-top-group");
+  const heroBottom = document.getElementById("hero-bottom-group");
+  if (!canvas) return;
+
+  // Phase 1 (0.0s): Typography visible in spatial composition, 3D Canvas starts transparent
+  canvas.style.opacity = "0";
+  if (heroTop) heroTop.style.opacity = "1";
+  if (heroBottom) heroBottom.style.opacity = "1";
+
+  // Phase 2 (~1.6s): 3D Model gradually fades into view in center of spatial composition
+  setTimeout(() => {
+    canvas.style.opacity = "1";
+  }, 1600);
+}
+
+function initWorkspaceNavigationGuards() {
+  const workspaceLinks = document.querySelectorAll('a[href*="dashboard/index.html"]');
+  workspaceLinks.forEach(link => {
+    link.addEventListener("click", (e) => {
+      if (link.dataset.initializing === "true") {
+        e.preventDefault();
+        return;
+      }
+      link.dataset.initializing = "true";
+      link.style.pointerEvents = "none";
+      link.style.opacity = "0.75";
+      
+      const span = link.querySelector("span");
+      if (span && !span.textContent.includes("Initializing")) {
+        span.textContent = "Initializing...";
+      }
+    });
+  });
+}
 
 // ============================================================================
 // 3. THEME MANAGER (Dark / Light)
@@ -191,15 +243,15 @@ function initThreeSpatialScene() {
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-  // Lighting
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+  // Lighting (Restrained, low-intensity engineered lighting)
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
   scene.add(ambientLight);
 
-  const dirLight1 = new THREE.DirectionalLight(0x38bdf8, 2.0);
+  const dirLight1 = new THREE.DirectionalLight(0x38bdf8, 0.8);
   dirLight1.position.set(10, 12, 10);
   scene.add(dirLight1);
 
-  const dirLight2 = new THREE.DirectionalLight(0x6366f1, 1.5);
+  const dirLight2 = new THREE.DirectionalLight(0x6366f1, 0.4);
   dirLight2.position.set(-10, -10, 8);
   scene.add(dirLight2);
 
@@ -216,10 +268,11 @@ function initThreeSpatialScene() {
   const boxMat = new THREE.LineBasicMaterial({
     color: 0x38bdf8,
     transparent: true,
-    opacity: 0.35,
-    linewidth: 1.5
+    opacity: 0.2,
+    linewidth: 1
   });
   boundingCube = new THREE.LineSegments(boxEdges, boxMat);
+  boundingCube.visible = false;
   modelArtifactGroup.add(boundingCube);
 
   // 2. Construct 5 Distinct Neural Network Layers
@@ -283,13 +336,13 @@ function buildNeuralNetworkLayers() {
     { rows: 2, cols: 2 }  // L5: Logits (4 nodes)
   ];
 
-  const nodeGeometry = new THREE.SphereGeometry(0.12, 16, 16);
+  const nodeGeometry = new THREE.SphereGeometry(0.1, 16, 16);
   const nodeMaterial = new THREE.MeshStandardMaterial({
     color: 0x38bdf8,
     emissive: 0x0284c7,
-    emissiveIntensity: 0.8,
-    roughness: 0.2,
-    metalness: 0.8
+    emissiveIntensity: 0.2,
+    roughness: 0.3,
+    metalness: 0.7
   });
 
   const layerNodesData = [];
@@ -473,10 +526,10 @@ function animateScene() {
 
   const time = performance.now() * 0.001;
 
-  // 1. Smooth Camera Movement towards target position
-  currentCamPos.x += (targetCamX - currentCamPos.x) * 0.06;
-  currentCamPos.y += (targetCamY - currentCamPos.y) * 0.06;
-  currentCamPos.z += (targetCamZ - currentCamPos.z) * 0.06;
+  // 1. Ultra-Smooth Buttery Camera Movement towards target position
+  currentCamPos.x += (targetCamX - currentCamPos.x) * 0.038;
+  currentCamPos.y += (targetCamY - currentCamPos.y) * 0.038;
+  currentCamPos.z += (targetCamZ - currentCamPos.z) * 0.038;
 
   camera.position.set(
     currentCamPos.x + (mouseX * 0.8),
@@ -485,17 +538,17 @@ function animateScene() {
   );
   camera.lookAt(currentCamLook.x, currentCamLook.y, currentCamLook.z);
 
-  // 2. Slow Ambient Rotation of the Model Artifact
+  // 2. Slow, Restrained Ambient Rotation of the Model Artifact
   if (modelArtifactGroup) {
-    modelArtifactGroup.rotation.y = time * 0.12 + (mouseX * 0.2);
-    modelArtifactGroup.rotation.x = Math.sin(time * 0.08) * 0.08 + (mouseY * 0.15);
+    modelArtifactGroup.rotation.y = time * 0.05 + (mouseX * 0.05);
+    modelArtifactGroup.rotation.x = Math.sin(time * 0.03) * 0.03 + (mouseY * 0.05);
   }
 
   // 3. Pulse Signal Particles across layers
   if (signalParticles) {
     const pos = signalParticles.geometry.attributes.position.array;
     for (let i = 0; i < pos.length / 3; i++) {
-      pos[i * 3] += 0.04;
+      pos[i * 3] += 0.03;
       if (pos[i * 3] > 2.6) {
         pos[i * 3] = -2.6;
         pos[i * 3 + 1] = (Math.random() - 0.5) * 2.5;
@@ -507,7 +560,7 @@ function animateScene() {
 
   // 4. Ambient Background Particle Drift
   if (ambientParticleSystem) {
-    ambientParticleSystem.rotation.y = time * 0.02;
+    ambientParticleSystem.rotation.y = time * 0.01;
   }
 
   // 5. Dynamic Scroll Interpolation (0.0 to 1.0)
@@ -524,18 +577,18 @@ function updateScrollStageDynamics(p, time) {
 
   // --- STAGE 0: HERO (0.0 - 0.12) ---
   if (p < 0.12) {
-    targetCamX = 2.8;
-    targetCamY = 0.4;
-    targetCamZ = 15.5;
-    targetCamLook = { x: 0.5, y: 0, z: 0 };
+    targetCamX = 0.0;
+    targetCamY = 0.0;
+    targetCamZ = 14.0;
+    targetCamLook = { x: 0.0, y: 0, z: 0 };
 
-    modelArtifactGroup.scale.setScalar(0.95);
-    boundingCube.material.opacity = 0.25;
+    modelArtifactGroup.scale.setScalar(0.9);
+    boundingCube.visible = false;
     scanLaserPlane.material.opacity = 0.0;
     shieldMesh.material.opacity = 0.0;
     attackParticles.material.opacity = 0.0;
 
-    setLayerEmissive(0x0284c7, 0.6);
+    setLayerEmissive(0x38bdf8, 0.15);
   }
   // --- STAGE 1: DETECT (0.12 - 0.28) ---
   else if (p < 0.28) {
@@ -690,11 +743,12 @@ function initScrollStoryController() {
   const scrollTrack = document.getElementById("scroll-track");
   if (!storyContainer || !scrollTrack) return;
 
-  const heroLayer = document.getElementById("hero-layer");
-  const inspectionLayer = document.getElementById("inspection-layer");
-  const cliTransformLayer = document.getElementById("cli-transform-layer");
+  const spatialComp = document.getElementById("spatial-composition");
+  const heroTop = document.getElementById("hero-top-group");
+  const heroBottom = document.getElementById("hero-bottom-group");
+  const hudStage = document.getElementById("spatial-hud-stage");
+  const cliStage = document.getElementById("spatial-cli-stage");
   const progressBar = document.getElementById("story-progress-bar");
-  const tagShield = document.getElementById("tag-shield");
 
   window.addEventListener("scroll", () => {
     const rect = scrollTrack.getBoundingClientRect();
@@ -724,54 +778,117 @@ function initScrollStoryController() {
       updateStageDOM(currentStage);
     }
 
-    // Dynamic Layer Opacity Cross-Fading
-    if (heroLayer && inspectionLayer && cliTransformLayer) {
-      if (scrollProgress < 0.12) {
-        // Hero visible
-        const heroOpacity = Math.max(0, 1 - (scrollProgress / 0.12) * 1.5);
-        heroLayer.style.opacity = heroOpacity;
-        heroLayer.style.pointerEvents = heroOpacity > 0.5 ? "auto" : "none";
-        heroLayer.style.transform = `translateY(${-scrollProgress * 150}px)`;
-
-        inspectionLayer.style.opacity = 0;
-        inspectionLayer.style.pointerEvents = "none";
-
-        cliTransformLayer.style.opacity = 0;
-        cliTransformLayer.style.pointerEvents = "none";
-      } else if (scrollProgress < 0.90) {
-        // Inspection HUD & 3D dominant (takes 65-70% viewport)
-        heroLayer.style.opacity = 0;
-        heroLayer.style.pointerEvents = "none";
-
-        inspectionLayer.style.opacity = 1;
-        inspectionLayer.style.pointerEvents = "auto";
-
-        cliTransformLayer.style.opacity = 0;
-        cliTransformLayer.style.pointerEvents = "none";
+    // 3D Canvas Visibility Lifecycle: Fade out 3D model artifact cleanly in Stage 06 // DEPLOY
+    const webglCanvas = document.getElementById("webgl-canvas");
+    if (webglCanvas) {
+      if (scrollProgress >= 0.88) {
+        const fadeP = Math.min(1, (scrollProgress - 0.88) / 0.08);
+        const canvasOpacity = Math.max(0, 1 - fadeP * 1.5);
+        webglCanvas.style.opacity = canvasOpacity.toFixed(2);
+        if (modelArtifactGroup) {
+          modelArtifactGroup.visible = canvasOpacity > 0.05;
+        }
       } else {
-        // Stage 6 CLI Morph visible
-        heroLayer.style.opacity = 0;
-        heroLayer.style.pointerEvents = "none";
-
-        const fadeOutInspect = Math.max(0, 1 - (scrollProgress - 0.90) / 0.05);
-        inspectionLayer.style.opacity = fadeOutInspect;
-        inspectionLayer.style.pointerEvents = "none";
-
-        const fadeInCLI = Math.min(1, (scrollProgress - 0.90) / 0.08);
-        cliTransformLayer.style.opacity = fadeInCLI;
-        cliTransformLayer.style.pointerEvents = fadeInCLI > 0.5 ? "auto" : "none";
-        cliTransformLayer.style.transform = `translateY(${(1 - fadeInCLI) * 30}px)`;
+        webglCanvas.style.opacity = "1";
+        if (modelArtifactGroup) {
+          modelArtifactGroup.visible = true;
+        }
       }
     }
 
-    // Shield Tag state
-    if (tagShield) {
-      if (currentStage === 5) {
-        tagShield.style.opacity = "1";
-        tagShield.style.transform = "scale(1)";
+    // Dynamic Spatial Composition Lifecycle
+    if (spatialComp) {
+      const floatingCallouts = document.querySelectorAll(".floating-callout, .spatial-leader-svg, .top-right-landing-gif-container");
+
+      if (scrollProgress < 0.12) {
+        // --- STAGE 00 // HERO: Floating 3D Spatial Callouts Active ---
+        const p0 = scrollProgress / 0.12;
+        const heroOpacity = Math.max(0, 1 - p0 * 1.4);
+
+        spatialComp.style.setProperty("--scene-scale", (1.0 - p0 * 0.08).toFixed(3));
+        spatialComp.style.setProperty("--scene-translate-y", `${-p0 * 40}px`);
+        spatialComp.style.setProperty("--scene-translate-x", "0px");
+
+        if (heroTop) {
+          heroTop.style.opacity = heroOpacity;
+          heroTop.style.transform = `translateY(${-p0 * 30}px)`;
+        }
+        floatingCallouts.forEach(el => {
+          el.style.opacity = heroOpacity;
+          el.style.pointerEvents = heroOpacity > 0.5 ? "auto" : "none";
+        });
+
+        if (hudStage) {
+          hudStage.style.opacity = 0;
+          hudStage.style.transform = "translate(-50%, 25px)";
+          hudStage.style.pointerEvents = "none";
+        }
+        if (cliStage) {
+          cliStage.style.opacity = 0;
+          cliStage.style.pointerEvents = "none";
+        }
+
+      } else if (scrollProgress < 0.90) {
+        // --- STAGES 01 - 05 // VERIFICATION JOURNEY ---
+        if (heroTop) heroTop.style.opacity = 0;
+        floatingCallouts.forEach(el => {
+          el.style.opacity = 1;
+          el.style.pointerEvents = "auto";
+        });
+
+        let scale = 1.05;
+        let transX = 0;
+
+        if (currentStage === 1) scale = 1.06;
+        else if (currentStage === 2) scale = 1.15;
+        else if (currentStage === 3) scale = 1.20;
+        else if (currentStage === 4) scale = 1.18;
+        else if (currentStage === 5) scale = 1.12;
+
+        spatialComp.style.setProperty("--scene-scale", scale.toFixed(3));
+        spatialComp.style.setProperty("--scene-translate-x", `${transX}px`);
+        spatialComp.style.setProperty("--scene-translate-y", "0px");
+
+        // Shorten leader line arrows as model scale enlarges so arrows terminate cleanly at outer edge
+        const leaderSvg = document.querySelector(".spatial-leader-svg");
+        if (leaderSvg) {
+          const arrowShortenScale = Math.max(0.65, 1.0 - (scale - 1.0) * 1.85);
+          leaderSvg.style.transform = `scale(${arrowShortenScale.toFixed(3)})`;
+        }
+
+        if (hudStage) {
+          hudStage.style.opacity = 1;
+          hudStage.style.transform = "translate(-50%, 0px)";
+          hudStage.style.pointerEvents = "auto";
+        }
+        if (cliStage) {
+          cliStage.style.opacity = 0;
+          cliStage.style.pointerEvents = "none";
+        }
+
       } else {
-        tagShield.style.opacity = "0";
-        tagShield.style.transform = "scale(0.9)";
+        // --- STAGE 06 // DEPLOY CLI MORPH ---
+        const pCli = (scrollProgress - 0.90) / 0.10;
+        if (heroTop) heroTop.style.opacity = 0;
+        floatingCallouts.forEach(el => {
+          el.style.opacity = 0;
+          el.style.pointerEvents = "none";
+        });
+        if (hudStage) {
+          hudStage.style.opacity = 0;
+          hudStage.style.transform = "translate(-50%, 25px)";
+          hudStage.style.pointerEvents = "none";
+        }
+
+        spatialComp.style.setProperty("--scene-scale", (1.0 - pCli * 0.05).toFixed(3));
+        spatialComp.style.setProperty("--scene-translate-x", "0px");
+        spatialComp.style.setProperty("--scene-translate-y", "0px");
+
+        if (cliStage) {
+          const cliOpacity = Math.min(1, pCli * 1.8);
+          cliStage.style.opacity = cliOpacity;
+          cliStage.style.pointerEvents = cliOpacity > 0.5 ? "auto" : "none";
+        }
       }
     }
 
@@ -784,28 +901,55 @@ function updateStageDOM(stageIdx) {
   const config = STAGE_CONFIGS[stageIdx];
   if (!config) return;
 
+  const hudStage = document.getElementById("spatial-hud-stage");
   const idxEl = document.getElementById("hud-stage-index");
   const titleEl = document.getElementById("hud-stage-title");
-  const descEl = document.getElementById("hud-stage-desc");
-  const modelEl = document.getElementById("meta-val-model");
-  const paramsEl = document.getElementById("meta-val-params");
-  const frameworkEl = document.getElementById("meta-val-framework");
-  const stateEl = document.getElementById("meta-val-state");
-  const cliTagEl = document.getElementById("hud-cli-tag");
-  const cliContentEl = document.getElementById("hud-cli-content");
 
-  if (idxEl) idxEl.innerText = config.name;
-  if (titleEl) titleEl.innerText = config.title;
-  if (descEl) descEl.innerText = config.desc;
-  if (modelEl) modelEl.innerText = config.model;
-  if (paramsEl) paramsEl.innerText = config.params;
-  if (frameworkEl) frameworkEl.innerText = config.framework;
-  if (stateEl) {
-    stateEl.innerText = config.state;
-    stateEl.style.color = config.stateColor;
+  if (hudStage) {
+    hudStage.style.transform = "translate(-50%, 15px)";
+    hudStage.style.opacity = "0.3";
   }
-  if (cliTagEl) cliTagEl.innerText = config.cliTag;
-  if (cliContentEl) cliContentEl.innerHTML = config.cliLines;
+
+  setTimeout(() => {
+    if (idxEl) {
+      idxEl.innerText = config.name;
+      idxEl.classList.remove("slide-up-active");
+      void idxEl.offsetWidth;
+      idxEl.classList.add("slide-up-active");
+    }
+    if (titleEl) {
+      titleEl.innerText = config.title;
+      titleEl.classList.remove("slide-up-active");
+      void titleEl.offsetWidth;
+      titleEl.classList.add("slide-up-active");
+    }
+
+    // Update 4 corner popup detail callouts dynamically per stage
+    if (config.popups) {
+      const popTLlbl = document.getElementById("pop-tl-label");
+      const popTLtitle = document.getElementById("pop-tl-title");
+      const popTRlbl = document.getElementById("pop-tr-label");
+      const popTRtitle = document.getElementById("pop-tr-title");
+      const popBLlbl = document.getElementById("pop-bl-label");
+      const popBLtitle = document.getElementById("pop-bl-title");
+      const popBRlbl = document.getElementById("pop-br-label");
+      const popBRtitle = document.getElementById("pop-br-title");
+
+      if (popTLlbl && config.popups.tl) popTLlbl.innerText = config.popups.tl.label;
+      if (popTLtitle && config.popups.tl) popTLtitle.innerText = config.popups.tl.title;
+      if (popTRlbl && config.popups.tr) popTRlbl.innerText = config.popups.tr.label;
+      if (popTRtitle && config.popups.tr) popTRtitle.innerText = config.popups.tr.title;
+      if (popBLlbl && config.popups.bl) popBLlbl.innerText = config.popups.bl.label;
+      if (popBLtitle && config.popups.bl) popBLtitle.innerText = config.popups.bl.title;
+      if (popBRlbl && config.popups.br) popBRlbl.innerText = config.popups.br.label;
+      if (popBRtitle && config.popups.br) popBRtitle.innerText = config.popups.br.title;
+    }
+
+    if (hudStage) {
+      hudStage.style.transform = "translate(-50%, 0px)";
+      hudStage.style.opacity = "1";
+    }
+  }, 50);
 }
 
 function updateScrubberUI(activeIdx) {
@@ -847,6 +991,93 @@ function initCursorInteractions() {
     mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
     mouseY = -(e.clientY / window.innerHeight - 0.5) * 2;
   });
+
+  // Stage 06 Morph Terminal 3D Hover Tilt & Spotlight Tracking
+  const morphTerm = document.getElementById("morph-terminal");
+  if (morphTerm) {
+    morphTerm.addEventListener("mousemove", (e) => {
+      const rect = morphTerm.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+
+      const rotateX = ((y - centerY) / centerY) * -6; // 6 deg max tilt
+      const rotateY = ((x - centerX) / centerX) * 6;
+
+      morphTerm.style.setProperty("--spot-x", `${x}px`);
+      morphTerm.style.setProperty("--spot-y", `${y}px`);
+      morphTerm.style.transform = `perspective(1000px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) scale3d(1.02, 1.02, 1.02)`;
+    });
+
+    morphTerm.addEventListener("mouseleave", () => {
+      morphTerm.style.transform = "perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)";
+    });
+  }
+
+  // Interactive Copy Line Handlers inside Terminal
+  const copyLines = document.querySelectorAll(".interactive-copy-line");
+  copyLines.forEach(line => {
+    line.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const textToCopy = line.dataset.copy || line.textContent.trim();
+      const tooltip = line.querySelector(".line-copy-tooltip");
+      const icon = line.querySelector(".line-copy-icon");
+
+      navigator.clipboard.writeText(textToCopy).then(() => {
+        if (tooltip) tooltip.textContent = "Copied!";
+        if (icon) icon.className = "ri-check-line line-copy-icon color-emerald";
+
+        setTimeout(() => {
+          if (tooltip) tooltip.textContent = "Copy";
+          if (icon) icon.className = "ri-file-copy-line line-copy-icon";
+        }, 1800);
+      }).catch(() => {});
+    });
+  });
+
+  // Cursor-Related Spotlight Hover & Full Click Fill for "Go to Workspace" Buttons
+  const workspaceBtns = document.querySelectorAll(
+    ".btn-morph-primary, .btn-banner-primary, .nav-btn-primary, .callout-action-btn"
+  );
+  workspaceBtns.forEach(btn => {
+    btn.addEventListener("mousemove", (e) => {
+      const rect = btn.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      btn.style.setProperty("--btn-mouse-x", `${x.toFixed(1)}px`);
+      btn.style.setProperty("--btn-mouse-y", `${y.toFixed(1)}px`);
+    });
+
+    btn.addEventListener("click", () => {
+      btn.classList.add("btn-clicked");
+    });
+  });
+
+  // Dynamic Speech Bubble Popup on Agent GIF Hover (Rare Developer Shortcuts, No Emojis)
+  const landingGifContainer = document.getElementById("landing-gif-container");
+  const bubbleTextEl = document.getElementById("bubble-text");
+
+  const shortcutTips = [
+    { key: "Ctrl + Shift + P", desc: "Trigger IDE Command Palette" },
+    { key: "Ctrl + Shift + \\", desc: "Jump to matching bracket" },
+    { key: "Alt + Z", desc: "Toggle soft word wrap" },
+    { key: "Ctrl + F2", desc: "Select all symbol occurrences" },
+    { key: "Ctrl + Shift + K", desc: "Delete current line instantly" },
+    { key: "Ctrl + Alt + Down", desc: "Add multi-cursor caret below" },
+    { key: "Ctrl + K, Ctrl + S", desc: "Open shortcut reference map" },
+    { key: "Ctrl + R", desc: "Reverse command history search" },
+    { key: "Ctrl + L", desc: "Clear terminal viewport" },
+    { key: "Ctrl + Shift + V", desc: "Paste plain unformatted text" }
+  ];
+
+  if (landingGifContainer && bubbleTextEl) {
+    landingGifContainer.addEventListener("mouseenter", () => {
+      const tip = shortcutTips[Math.floor(Math.random() * shortcutTips.length)];
+      bubbleTextEl.innerHTML = `<span class="bubble-key-badge">${tip.key}</span> ${tip.desc}`;
+    });
+  }
 }
 
 // ============================================================================

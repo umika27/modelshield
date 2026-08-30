@@ -24,11 +24,8 @@
   <!-- 3D Spatial Canvas (Fixed in Viewport) -->
   <canvas id="webgl-canvas"></canvas>
 
-  <!-- Ambient Cinematic Atmosphere -->
-  <div class="ambient-glow glow-primary"></div>
-  <div class="ambient-glow glow-secondary"></div>
+  <!-- Ambient Backdrop -->
   <div class="grid-backdrop"></div>
-  <div class="scanline-overlay"></div>
 
   <!-- 1. Minimal Top Navigation Bar -->
   <header class="landing-nav" id="top-nav">
@@ -66,13 +63,21 @@
         </div>
 
         <a href="dashboard/index.html" class="nav-btn-text">Sign In</a>
-        <a href="dashboard/index.html" class="nav-btn-primary">
-          <span>Get Started</span>
+        <a href="dashboard/index.html" class="nav-btn-primary" id="btn-go-workspace">
+          <span>Go to Workspace</span>
           <i class="ri-arrow-right-line"></i>
         </a>
       </div>
     </div>
   </header>
+
+  <!-- Floating Top-Right Landing GIF Badge with Hover Shortcut Key Description -->
+  <div class="top-right-landing-gif-container" id="landing-gif-container" title="ModelShield Landing Agent">
+    <div class="gif-hover-speech-bubble mono" id="gif-speech-bubble">
+      <span class="bubble-text" id="bubble-text"><span class="bubble-key-badge">Ctrl + Shift + P</span> Trigger Command Palette</span>
+    </div>
+    <img src="agents/gif/landing.gif" alt="Landing Agent GIF" class="top-right-landing-gif" onerror="if(!this.src.includes('agents_gif')) this.src='agents_gif/landing.gif';" />
+  </div>
 
   <!-- 2. Continuous Scroll-Driven Story Container -->
   <div class="story-container" id="storyline">
@@ -80,132 +85,124 @@
     <!-- Sticky Viewport Stage (Locks in place while user scrolls through the 6 stages) -->
     <div class="sticky-stage" id="sticky-stage">
 
-      <!-- ==================== HERO SECTION (STAGE 0: 0% Scroll) ==================== -->
-      <div class="stage-layer hero-layer" id="hero-layer">
+      <!-- ==================== UNIFIED SPATIAL HERO SCENE ==================== -->
+      <div class="spatial-hero-scene" id="hero-spatial-scene">
         
-        <div class="hero-center-wrapper">
+        <!-- Unified Spatial Composition Container -->
+        <div class="spatial-composition" id="spatial-composition">
           
-          <!-- Eyebrow Badge -->
-          <div class="eyebrow-badge">
-            <span class="eyebrow-radar"></span>
-            <span class="eyebrow-text mono">AI MODEL SECURITY PLATFORM</span>
+          <!-- Minimal Hero Header -->
+          <div class="spatial-layer spatial-hero-top" id="hero-top-group">
+            <div class="hero-eyebrow mono">MODEL VERIFICATION</div>
+            <h1 class="hero-headline">Verify Your ML Models.</h1>
           </div>
 
-          <!-- Main Hero Headline -->
-          <h1 class="hero-headline">
-            <span class="luminous-word">Secure</span> Every Model<br>
-            Before It Ships.
-          </h1>
+          <!-- Central 3D Model Viewport Area with Floating Spatial Callouts -->
+          <div class="spatial-model-viewport" id="spatial-model-viewport">
 
-          <!-- Supporting Text -->
-          <p class="hero-subtext">
-            ModelShield evaluates, stress-tests, and monitors AI models for security, robustness, and reproducibility — before they reach production.
-          </p>
+            <!-- SVG Thin Technical Pointer / Leader Lines -->
+            <svg class="spatial-leader-svg" viewBox="0 0 1000 500" preserveAspectRatio="none">
+              <!-- Top-Left Leader Line -->
+              <polyline points="220,90 310,90 380,180" class="leader-line" />
+              <circle cx="380" cy="180" r="3" class="leader-dot" />
 
-          <!-- Action CTA Group -->
-          <div class="hero-cta-group">
-            <a href="dashboard/index.html" class="btn-hero-primary" id="hero-start-scan">
-              <i class="ri-radar-line"></i>
-              <span>Start Scanning</span>
-            </a>
-            <a href="#platform-stack" class="btn-hero-secondary" id="hero-explore-platform">
-              <i class="ri-terminal-box-line"></i>
-              <span>Explore the Platform</span>
-            </a>
-          </div>
+              <!-- Top-Right Leader Line -->
+              <polyline points="780,100 690,100 620,160" class="leader-line" />
+              <circle cx="620" cy="160" r="3" class="leader-dot" />
 
-          <!-- Hero Floating Interactive Security Terminal -->
-          <div class="hero-terminal-card" id="hero-terminal">
-            <div class="hero-terminal-header">
-              <div class="terminal-dots">
-                <span class="dot dot-red"></span>
-                <span class="dot dot-yellow"></span>
-                <span class="dot dot-green"></span>
-              </div>
-              <div class="terminal-tab mono">
-                <i class="ri-terminal-line"></i> modelshield-cli — resnet50
-              </div>
-              <div class="terminal-badge mono">PROD-GATE</div>
+              <!-- Bottom-Right Leader Line -->
+              <polyline points="780,380 680,380 610,320" class="leader-line" />
+              <circle cx="610" cy="320" r="3" class="leader-dot" />
+
+              <!-- Bottom-Left Leader Line -->
+              <polyline points="220,370 320,370 390,300" class="leader-line" />
+              <circle cx="390" cy="300" r="3" class="leader-dot" />
+            </svg>
+
+            <!-- Floating Spatial Callout 1 (Top-Left Popup) -->
+            <div class="floating-callout callout-top-left mono" id="callout-tl">
+              <div class="callout-label" id="pop-tl-label">SYSTEM_ID // RESNET50_V3</div>
+              <div class="callout-title" id="pop-tl-title">NEURAL GRAPH CAPTURE</div>
+              <div class="callout-crosshair">+</div>
             </div>
 
-            <div class="hero-terminal-body mono">
-              <div class="term-command-row">
-                <span class="term-prompt">$</span> <span class="term-cmd">modelshield scan resnet50 --target=release-v3.2</span>
-              </div>
-              
-              <div class="term-step-list" id="hero-term-steps">
-                <div class="term-step step-done"><span class="step-icon"><i class="ri-check-line"></i></span> Loading model metadata... <span class="step-val">25.6M FP16</span></div>
-                <div class="term-step step-done"><span class="step-icon"><i class="ri-check-line"></i></span> Running robustness evaluation... <span class="step-val">94%</span></div>
-                <div class="term-step step-done"><span class="step-icon"><i class="ri-check-line"></i></span> Testing adversarial resilience... <span class="step-val">Passed</span></div>
-                <div class="term-step step-done"><span class="step-icon"><i class="ri-check-line"></i></span> Checking reproducibility... <span class="step-val">97%</span></div>
+            <!-- Floating Spatial Callout 2 (Top-Right Popup) -->
+            <div class="floating-callout callout-top-right mono" id="callout-tr">
+              <div class="callout-label" id="pop-tr-label">SECURITY SCORE</div>
+              <div class="callout-title color-cyan" id="pop-tr-title">92.50 (+01.75 PASS)</div>
+              <div class="callout-crosshair">+</div>
+            </div>
+
+            <!-- Floating Spatial Callout 3 (Bottom-Left Popup) -->
+            <div class="floating-callout callout-bottom-left mono" id="callout-bl">
+              <div class="callout-label" id="pop-bl-label">TENSOR WEIGHTS</div>
+              <div class="callout-title" id="pop-bl-title">25.6M FP16 (OPTIMAL)</div>
+              <div class="callout-crosshair">+</div>
+            </div>
+
+            <!-- Floating Spatial Callout 4 (Bottom-Right Popup) -->
+            <div class="floating-callout callout-bottom-right mono" id="callout-br">
+              <div class="callout-label" id="pop-br-label">RELEASE_GATE // VERIFIED</div>
+              <div class="callout-title color-emerald" id="pop-br-title">CLICK TO INSPECT MODEL</div>
+              <div class="callout-crosshair">+</div>
+            </div>
+
+          </div>
+
+          <!-- Dynamic Stage HUD (Heading Centered Below Model, No Description, No Glow) -->
+          <div class="spatial-layer spatial-hud-stage" id="spatial-hud-stage">
+            <div class="hud-stage-index mono" id="hud-stage-index">STAGE 01 // INGESTION</div>
+            <h2 class="hud-stage-title" id="hud-stage-title">Model Weight Ingestion.</h2>
+          </div>
+
+          <!-- Spatial Element 5: Stage 06 Minimal Pip Install Terminal -->
+          <div class="spatial-layer spatial-cli-stage" id="spatial-cli-stage">
+            <div class="cli-morph-header">
+              <div class="hud-stage-index mono">STAGE 06 // DEPLOY</div>
+              <h2 class="cli-morph-title">Install &amp; Run.</h2>
+            </div>
+
+            <div class="expanded-cli-terminal mono" id="morph-terminal">
+              <div class="expanded-cli-top">
+                <div class="terminal-dots">
+                  <span class="dot dot-red"></span>
+                  <span class="dot dot-yellow"></span>
+                  <span class="dot dot-green"></span>
+                </div>
+                <div class="expanded-cli-title">terminal — modelshield</div>
               </div>
 
-              <!-- Terminal Evaluation Metric Score Card -->
-              <div class="hero-terminal-score-card">
-                <div class="score-main-group">
-                  <span class="score-label">SECURITY SCORE</span>
-                  <div class="score-value-row">
-                    <span class="score-number mono" id="hero-score-counter">92</span>
-                    <span class="score-max mono">/ 100</span>
+              <div class="expanded-cli-content" id="morph-cli-stream">
+                <div class="cli-line cmd interactive-copy-line" data-copy="pip install modelshield" title="Click to copy command">
+                  <div class="line-left">
+                    <span class="prm">$</span>
+                    <span class="cmd-text">pip install modelshield</span>
                   </div>
-                  <div class="score-status-tag status-low-risk">
-                    <i class="ri-shield-check-line"></i> LOW RISK
+                  <div class="line-right">
+                    <i class="ri-file-copy-line line-copy-icon"></i>
+                    <span class="line-copy-tooltip">Copy</span>
                   </div>
                 </div>
-
-                <div class="score-metrics-list">
-                  <div class="score-metric-row">
-                    <span class="metric-name">Robustness</span>
-                    <div class="metric-bar-track">
-                      <div class="metric-bar-fill" style="width: 94%;"></div>
-                    </div>
-                    <span class="metric-val mono">94%</span>
+                <div class="cli-line info">&gt; Successfully installed modelshield-1.0.0</div>
+                <div class="cli-line cmd interactive-copy-line" data-copy="modelshield scan resnet50-v3.pkl" title="Click to copy command">
+                  <div class="line-left">
+                    <span class="prm">$</span>
+                    <span class="cmd-text">modelshield scan resnet50-v3.pkl</span>
                   </div>
-                  <div class="score-metric-row">
-                    <span class="metric-name">Privacy</span>
-                    <div class="metric-bar-track">
-                      <div class="metric-bar-fill" style="width: 89%;"></div>
-                    </div>
-                    <span class="metric-val mono">89%</span>
-                  </div>
-                  <div class="score-metric-row">
-                    <span class="metric-name">Reproducibility</span>
-                    <div class="metric-bar-track">
-                      <div class="metric-bar-fill" style="width: 97%;"></div>
-                    </div>
-                    <span class="metric-val mono">97%</span>
+                  <div class="line-right">
+                    <i class="ri-file-copy-line line-copy-icon"></i>
+                    <span class="line-copy-tooltip">Copy</span>
                   </div>
                 </div>
+                <div class="cli-line deploy-ready color-emerald">&gt;&gt; VERIFIED — RELEASE APPROVED</div>
               </div>
 
-            </div>
-          </div>
-
-          <!-- Hero Bottom Technical Trust Strip -->
-          <div class="hero-trust-strip" id="trust-strip">
-            <div class="trust-item">
-              <i class="ri-cpu-line"></i>
-              <span>MODEL ANALYSIS</span>
-            </div>
-            <div class="trust-sep">/</div>
-            <div class="trust-item">
-              <i class="ri-shield-cross-line"></i>
-              <span>ADVERSARIAL TESTING</span>
-            </div>
-            <div class="trust-sep">/</div>
-            <div class="trust-item">
-              <i class="ri-radar-line"></i>
-              <span>ROBUSTNESS</span>
-            </div>
-            <div class="trust-sep">/</div>
-            <div class="trust-item">
-              <i class="ri-repeat-line"></i>
-              <span>REPRODUCIBILITY</span>
-            </div>
-            <div class="trust-sep">/</div>
-            <div class="trust-item">
-              <i class="ri-file-shield-line"></i>
-              <span>SECURITY REPORTS</span>
+              <div class="expanded-cli-actions">
+                <a href="dashboard/index.html" class="btn-morph-primary" id="btn-go-workspace-morph">
+                  <span>Go to Workspace</span>
+                  <i class="ri-arrow-right-line"></i>
+                </a>
+              </div>
             </div>
           </div>
 
@@ -213,184 +210,35 @@
 
       </div>
 
-      <!-- ==================== 3D SPATIAL STAGE OVERLAYS (STAGES 1 - 5) ==================== -->
-      <div class="stage-layer inspection-layer" id="inspection-layer">
-        
-        <!-- Left Minimal Floating Stage HUD (Non-blocking, compact typography) -->
-        <div class="stage-hud-left" id="stage-hud-left">
-          
-          <div class="hud-stage-index mono" id="hud-stage-index">STAGE 01 // INGESTION</div>
-          <h2 class="hud-stage-title" id="hud-stage-title">Model Detected.</h2>
-          <p class="hud-stage-desc" id="hud-stage-desc">
-            Raw candidate weights ingested into computational inspection graph. Resolving tensor dimensions and node hierarchy.
-          </p>
-
-          <!-- Minimal Stage Metadata Pills -->
-          <div class="hud-meta-list mono" id="hud-meta-list">
-            <div class="hud-meta-item">
-              <span class="meta-k">ARTIFACT</span>
-              <strong class="meta-v" id="meta-val-model">resnet50-v3.pkl</strong>
-            </div>
-            <div class="hud-meta-item">
-              <span class="meta-k">PARAMS</span>
-              <strong class="meta-v" id="meta-val-params">25.6M FP16</strong>
-            </div>
-            <div class="hud-meta-item">
-              <span class="meta-k">FRAMEWORK</span>
-              <strong class="meta-v" id="meta-val-framework">PyTorch 2.2</strong>
-            </div>
-            <div class="hud-meta-item">
-              <span class="meta-k">STATE</span>
-              <strong class="meta-v color-cyan" id="meta-val-state">ACTIVE SCAN</strong>
-            </div>
-          </div>
-
-          <!-- Dynamic Stage CLI Stream snippet -->
-          <div class="hud-cli-box mono" id="hud-cli-box">
-            <div class="hud-cli-header">
-              <span class="hud-cli-dot"></span>
-              <span id="hud-cli-tag">STREAM: GRAPH_SYNAPSE</span>
-            </div>
-            <div class="hud-cli-content" id="hud-cli-content">
-              &gt; Loading weights tensor... OK<br>
-              &gt; Mapping 50 neural layers... OK<br>
-              &gt; Initializing safety perimeter...
-            </div>
-          </div>
-
-        </div>
-
-        <!-- Right Side: 3D Model Floating Spatial Tags (DOM overlay pinned to 3D perspective) -->
-        <div class="spatial-3d-labels" id="spatial-labels">
-          <div class="spatial-tag tag-layer-1 mono" id="tag-l1">
-            <span class="tag-dot"></span>
-            <div class="tag-card">
-              <strong class="tag-title">Layer 01: Conv2D</strong>
-              <span class="tag-info">3x224x224 → 64 channels</span>
-            </div>
-          </div>
-
-          <div class="spatial-tag tag-layer-3 mono" id="tag-l3">
-            <span class="tag-dot"></span>
-            <div class="tag-card">
-              <strong class="tag-title">Layer 03: ResBlock Array</strong>
-              <span class="tag-info">8x Bottleneck Blocks (FP16)</span>
-            </div>
-          </div>
-
-          <div class="spatial-tag tag-layer-5 mono" id="tag-l5">
-            <span class="tag-dot"></span>
-            <div class="tag-card">
-              <strong class="tag-title">Layer 05: Dense Head</strong>
-              <span class="tag-info">2048 → 1000 Class Logits</span>
-            </div>
-          </div>
-
-          <div class="spatial-tag tag-shield mono" id="tag-shield">
-            <span class="tag-shield-icon"><i class="ri-shield-flash-line"></i></span>
-            <div class="tag-card shield-card">
-              <strong class="tag-title color-emerald">VOLUMETRIC SHIELD ACTIVE</strong>
-              <span class="tag-info">Adversarial Boundary Established</span>
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- ==================== STAGE 6: 3D -> CLI MORPHING TRANSFORMATION ==================== -->
-      <div class="stage-layer cli-transform-layer" id="cli-transform-layer">
-        
-        <div class="cli-morph-container">
-          
-          <div class="cli-morph-header">
-            <div class="eyebrow-badge">
-              <span class="eyebrow-radar"></span>
-              <span class="eyebrow-text mono">VERIFICATION COMPLETE</span>
-            </div>
-            <h2 class="cli-morph-title">Ship With Confidence.</h2>
-            <p class="cli-morph-subtitle">
-              Every vulnerability neutralized, regression tests frozen, and CI/CD release gate approved.
-            </p>
-          </div>
-
-          <!-- Expanded Full-Scale Developer CLI Terminal -->
-          <div class="expanded-cli-terminal mono" id="morph-terminal">
-            <div class="expanded-cli-top">
-              <div class="terminal-dots">
-                <span class="dot dot-red"></span>
-                <span class="dot dot-yellow"></span>
-                <span class="dot dot-green"></span>
-              </div>
-              <div class="expanded-cli-title">modelshield-runtime — production-gate</div>
-              <div class="expanded-cli-status-badge">
-                <i class="ri-checkbox-circle-fill"></i> GATE: APPROVED
-              </div>
-            </div>
-
-            <div class="expanded-cli-content" id="morph-cli-stream">
-              <div class="cli-line cmd"><span class="prm">$</span> modelshield scan resnet50-v3.pkl --mode=exhaustive --gate</div>
-              <div class="cli-line info">&gt; [1/4] Loading model weights &amp; topology (25.6M params)... <span class="color-emerald">✓ VERIFIED</span></div>
-              <div class="cli-line info">&gt; [2/4] Executing multi-axis stress &amp; blur vectors...     <span class="color-emerald">✓ 94% ROBUST</span></div>
-              <div class="cli-line info">&gt; [3/4] Testing adversarial perturbation resilience...      <span class="color-emerald">✓ PASS (Δ&lt;0.04)</span></div>
-              <div class="cli-line info">&gt; [4/4] Verifying deterministic reproducibility (seed=42)...<span class="color-emerald">✓ 97% MATCH</span></div>
-              <div class="cli-line empty"></div>
-              <div class="cli-line highlight">------------------------------------------------------------------------</div>
-              <div class="cli-line highlight score-output">
-                <span>SECURITY SCORE: <strong class="color-emerald">92 / 100</strong> [LOW RISK]</span>
-                <span>STATUS: <strong class="color-cyan">RELEASE APPROVED (EXIT 0)</strong></span>
-              </div>
-              <div class="cli-line highlight">------------------------------------------------------------------------</div>
-              <div class="cli-line cmd"><span class="prm">$</span> modelshield deploy --target=prod-cluster-us-east</div>
-              <div class="cli-line deploy-ready">&gt;&gt; Model container capsule generated: capsule-v3-signed.tar.gz</div>
-              <div class="cli-line deploy-ready color-emerald">&gt;&gt; READY FOR PRODUCTION DEPLOYMENT</div>
-            </div>
-
-            <div class="expanded-cli-actions">
-              <a href="dashboard/index.html" class="btn-morph-primary">
-                <span>Launch ModelShield Workbench</span>
-                <i class="ri-arrow-right-line"></i>
-              </a>
-              <a href="#platform-stack" class="btn-morph-secondary">
-                <i class="ri-book-open-line"></i>
-                <span>View Architecture</span>
-              </a>
-            </div>
-
-          </div>
-
-        </div>
-
-      </div>
-
-      <!-- Stage Navigation Floating Scrubber (Left-Bottom Edge) -->
+      <!-- Minimal Horizontal Bar Scrubber on Right-Hand Side (RHS) -->
       <nav class="stage-scrubber" id="stage-scrubber" aria-label="Story Stages">
-        <button class="scrubber-item active" data-stage="0" title="Stage 0: Hero Overview">
-          <span class="scrubber-bar"></span>
+        <button type="button" class="scrubber-item active" data-stage="0" title="Stage 0: Hero Overview">
           <span class="scrubber-txt mono">00 // HERO</span>
-        </button>
-        <button class="scrubber-item" data-stage="1" title="Stage 1: Model Detected">
           <span class="scrubber-bar"></span>
+        </button>
+        <button type="button" class="scrubber-item" data-stage="1" title="Stage 1: Model Detected">
           <span class="scrubber-txt mono">01 // DETECT</span>
-        </button>
-        <button class="scrubber-item" data-stage="2" title="Stage 2: Layer Assembly">
           <span class="scrubber-bar"></span>
+        </button>
+        <button type="button" class="scrubber-item" data-stage="2" title="Stage 2: Layer Assembly">
           <span class="scrubber-txt mono">02 // BUILD</span>
-        </button>
-        <button class="scrubber-item" data-stage="3" title="Stage 3: Volumetric Scan">
           <span class="scrubber-bar"></span>
+        </button>
+        <button type="button" class="scrubber-item" data-stage="3" title="Stage 3: Volumetric Scan">
           <span class="scrubber-txt mono">03 // TEST</span>
-        </button>
-        <button class="scrubber-item" data-stage="4" title="Stage 4: Perturbation Attack">
           <span class="scrubber-bar"></span>
+        </button>
+        <button type="button" class="scrubber-item" data-stage="4" title="Stage 4: Perturbation Attack">
           <span class="scrubber-txt mono">04 // ATTACK</span>
-        </button>
-        <button class="scrubber-item" data-stage="5" title="Stage 5: Shield Verification">
           <span class="scrubber-bar"></span>
+        </button>
+        <button type="button" class="scrubber-item" data-stage="5" title="Stage 5: Shield Verification">
           <span class="scrubber-txt mono">05 // SHIELD</span>
-        </button>
-        <button class="scrubber-item" data-stage="6" title="Stage 6: CLI & Deploy">
           <span class="scrubber-bar"></span>
+        </button>
+        <button type="button" class="scrubber-item" data-stage="6" title="Stage 6: CLI &amp; Deploy">
           <span class="scrubber-txt mono">06 // DEPLOY</span>
+          <span class="scrubber-bar"></span>
         </button>
       </nav>
 
@@ -524,71 +372,7 @@
 
       </div>
 
-      <!-- Interactive Policy Simulator Sandbox -->
-      <div class="policy-sandbox-card">
-        <div class="sandbox-header">
-          <div class="sandbox-title-group">
-            <span class="sandbox-badge mono">LIVE DEMO</span>
-            <h3 class="sandbox-heading">Interactive Release Policy Simulator</h3>
-          </div>
-          <div class="model-selector-group mono">
-            <label for="model-select">Target Model:</label>
-            <select id="model-select" class="sandbox-select mono">
-              <option value="resnet50">resnet50-v3.pkl (25.6M)</option>
-              <option value="vit">vit-base-patch16.pt (86.1M)</option>
-              <option value="llama">llama-guard-7b.bin (7.2B)</option>
-            </select>
-          </div>
-        </div>
 
-        <div class="sandbox-body">
-          <div class="sandbox-controls">
-            <div class="control-item">
-              <div class="control-header">
-                <span class="control-label">Adversarial Perturbation Limit (ε)</span>
-                <span class="control-val mono" id="val-epsilon">0.035</span>
-              </div>
-              <input type="range" min="0.01" max="0.10" step="0.005" value="0.035" class="sandbox-slider" id="slider-epsilon">
-            </div>
-
-            <div class="control-item">
-              <div class="control-header">
-                <span class="control-label">Robustness Degradation Tolerance</span>
-                <span class="control-val mono" id="val-tolerance">-10%</span>
-              </div>
-              <input type="range" min="-25" max="-2" step="1" value="-10" class="sandbox-slider" id="slider-tolerance">
-            </div>
-
-            <div class="control-item">
-              <div class="control-header">
-                <span class="control-label">Strict Determinism Seed Gating</span>
-                <span class="control-val mono" id="val-seeds">Active (seed=42)</span>
-              </div>
-              <div class="sandbox-toggle-row">
-                <button class="sandbox-btn active" id="btn-strict-gate">Strict Gate (Reject on Fail)</button>
-                <button class="sandbox-btn" id="btn-soft-gate">Review Warning</button>
-              </div>
-            </div>
-          </div>
-
-          <div class="sandbox-output-terminal mono">
-            <div class="term-mini-header">
-              <span class="mini-dot"></span>
-              <span>SIMULATED_POLICY_EVALUATION</span>
-            </div>
-            <div class="term-mini-stream" id="sandbox-stream">
-              <span class="color-dim"># Initializing release policy evaluation...</span><br>
-              &gt; Target: <strong id="sim-target">resnet50-v3.pkl</strong><br>
-              &gt; Adversarial Bound: <span class="color-cyan" id="sim-eps">ε = 0.035</span><br>
-              &gt; Maximum Robustness Drop: <span class="color-cyan" id="sim-tol">-10.0%</span><br>
-              &gt; Perturbation Attack Simulation: <span class="color-emerald">PASS (Delta: -4.2%)</span><br>
-              &gt; Reproducibility Check: <span class="color-emerald">MATCH (100.0%)</span><br>
-              &gt; Policy Result: <strong class="color-emerald" id="sim-verdict">PASS — APPROVED FOR CI PIPELINE</strong>
-            </div>
-          </div>
-        </div>
-
-      </div>
 
       <!-- Bottom Launch CTA Banner -->
       <div class="platform-cta-banner">
