@@ -4,6 +4,7 @@ import { BASELINE_MODEL, CANDIDATE_PROFILES, dashboardState } from "./state.js";
 
 export async function hydrateDashboardFromApi() {
   const response = await fetch("/api/analysis/latest");
+  if (response.status === 404) return null;
   if (!response.ok) throw new Error((await response.json()).detail || "Live analysis is unavailable.");
   const analysis = await response.json();
   const condition = analysis.condition.type;

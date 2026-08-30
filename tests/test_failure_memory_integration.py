@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 from datetime import datetime, timezone
+import threading
 
 import pytest
 
@@ -126,3 +127,24 @@ def test_passing_evaluation_cannot_form_an_artifact():
     )
     with pytest.raises(ValueError, match="failing"):
         VerifiedFailureArtifact.from_verification(evaluation, verification)
+
+
+def test_in_memory_adapter_created_in_one_thread_is_safe_in_another_thread():
+    memory = FailureMemoryAdapter(":memory:")
+    result: list[object] = []
+    errors: list[BaseException] = []
+
+    def query_from_worker() -> None:
+        try:
+            result.extend(memory.list_active_regressions())
+        except BaseException as exc:  # pragma: no cover - assertion reports the exact worker failure
+            errors.append(exc)
+
+    worker = threading.Thread(target=query_from_worker)
+    worker.start()
+    worker.join()
+    try:
+        assert errors == []
+        assert result == []
+    finally:
+        memory.close()

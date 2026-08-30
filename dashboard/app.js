@@ -5,7 +5,6 @@
  */
 
 import { dashboardState } from "./state.js";
-import { hydrateDashboardFromApi } from "./live.js";
 import { createStatusBadge } from "./components/badge.js";
 import { createDataTable } from "./components/table.js";
 import { createTerminalOutput } from "./components/terminal.js";
@@ -21,6 +20,7 @@ let isDockMinimized = false;
 let isDockMaximized = false;
 let latestReplayResult = null;
 let workspaceLoader = null;
+let activeInvestigation = null;
 
 document.addEventListener("DOMContentLoaded", async () => {
   initTheme();
@@ -30,12 +30,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   setupAgentGif();
   setupBottomDock();
   setupDockResizer();
-  try {
-    await hydrateDashboardFromApi();
-    syncAllUI();
-  } catch (error) {
-    document.getElementById("view-content").innerHTML = `<div class="placeholder-view"><div class="placeholder-title">Live analysis unavailable</div><div class="placeholder-subtitle">${error.message} Run POST /api/analyze with local checkpoints and refresh.</div></div>`;
-  }
+  renderNoAnalysisState();
   setupWorkspaceLoader();
 });
 
@@ -249,12 +244,12 @@ function syncAllUI() {
 }
 
 function updateBreadcrumbs() {
-  const candidate = dashboardState.getSelectedCandidate();
+  const candidate = activeInvestigation?.candidate?.name || "no-analysis";
   const crumbCandidate = document.getElementById("crumb-candidate");
   const crumbView = document.getElementById("crumb-view");
   if (crumbCandidate) crumbCandidate.textContent = candidate;
   if (crumbView) {
-    if (currentView === "explorer") {
+    if (currentView === "explorer" && activeInvestigation) {
       const selectedId = dashboardState.getSelectedFailureId();
       crumbView.textContent = `failure-explorer / ${selectedId}`;
     } else {
@@ -278,27 +273,16 @@ function updateBreadcrumbs() {
 }
 
 function updateStatusBar() {
-  const candidate = dashboardState.getSelectedCandidate();
-  const decision = dashboardState.getReleaseDecision(candidate);
-  const regressions = dashboardState.getRegressionBank();
-
   const sbModel = document.getElementById("sb-model");
   const sbRegCount = document.getElementById("sb-reg-count");
+  const sbPolicy = document.getElementById("sb-policy");
   const sbExit = document.getElementById("sb-exit");
-
-  if (sbModel) sbModel.textContent = `${candidate}:${candidate.slice(-2)}`;
-  if (sbRegCount) sbRegCount.textContent = `${regressions.filter(r => r.enabled).length} active`;
+  if (sbModel) sbModel.textContent = activeInvestigation?.candidate?.name || "no analysis";
+  if (sbRegCount) sbRegCount.textContent = activeInvestigation ? `${activeInvestigation.experiments_executed} experiment(s)` : "not evaluated";
+  if (sbPolicy) sbPolicy.textContent = activeInvestigation ? "investigation only" : "unavailable";
   if (sbExit) {
-    if (decision.decision === "block") {
-      sbExit.textContent = "1 (BLOCKED)";
-      sbExit.style.color = "var(--status-block)";
-    } else if (decision.decision === "review") {
-      sbExit.textContent = "2 (REVIEW)";
-      sbExit.style.color = "var(--status-review)";
-    } else {
-      sbExit.textContent = "0 (PASSED)";
-      sbExit.style.color = "var(--status-pass)";
-    }
+    sbExit.textContent = "—";
+    sbExit.style.color = "var(--text-muted)";
   }
 }
 
@@ -306,26 +290,43 @@ function renderCurrentView() {
   const container = document.getElementById("view-content");
   if (!container) return;
 
-  switch (currentView) {
-    case "comparison":
-      renderModelComparison(container);
-      break;
-    case "explorer":
-      renderFailureExplorer(container);
-      break;
-    case "memory":
-      renderFailureMemory(container);
-      break;
-    case "results":
-      renderRegressionResults(container);
-      break;
-    case "gate":
-      renderReleaseGate(container);
-      break;
-    default:
-      renderPlaceholderView(container, currentView);
-      break;
+  if (currentView === "comparison" || currentView === "gate") {
+    if (activeInvestigation) renderInvestigation(container, activeInvestigation);
+    else renderNoAnalysisState(container);
+    return;
   }
+  renderNeutralWorkspace(container, currentView);
+}
+
+function renderNoAnalysisState(container = document.getElementById("view-content")) {
+  if (!container) return;
+  const candidateSelect = document.getElementById("model-select");
+  const baselineSelect = document.getElementById("baseline-select");
+  if (candidateSelect) candidateSelect.disabled = true;
+  if (baselineSelect) baselineSelect.disabled = true;
+  const crumbCandidate = document.getElementById("crumb-candidate");
+  const crumbView = document.getElementById("crumb-view");
+  if (crumbCandidate) crumbCandidate.textContent = "no-analysis";
+  if (crumbView) crumbView.textContent = "release-investigation";
+  updateStatusBar();
+  container.innerHTML = `
+    <div class="placeholder-view">
+      <i class="ri-radar-line placeholder-icon"></i>
+      <div class="placeholder-title">No release investigation has been run yet.</div>
+      <div class="placeholder-subtitle">Click <strong>Investigate Release</strong> to run the real ModelShield investigation.</div>
+    </div>
+  `;
+}
+
+function renderNeutralWorkspace(container, viewKey) {
+  const title = viewKey.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase());
+  container.innerHTML = `
+    <div class="placeholder-view">
+      <i class="ri-terminal-window-line placeholder-icon"></i>
+      <div class="placeholder-title">${title}</div>
+      <div class="placeholder-subtitle">No current evidence is available for this workspace. Run <strong>Investigate Release</strong> to create real ModelShield evidence.</div>
+    </div>
+  `;
 }
 
 function renderPlaceholderView(container, viewKey) {
@@ -765,6 +766,31 @@ function renderDockContent() {
   const dockBody = document.getElementById("dock-content");
   if (!dockBody) return;
 
+  if (!activeInvestigation) {
+    const emptyMessages = {
+      terminal: `<div class="term-prompt"><span class="term-user">modelshield</span>$ No analysis yet. Run <strong>Investigate Release</strong> to create real evidence.</div>`,
+      logs: `<div style="color: var(--text-muted); font-size: 11px;">No investigation logs are available yet.</div>`,
+      ci: `<div style="color: var(--text-muted); font-size: 11px;">No authoritative release decision is available until real evidence is produced.</div>`,
+    };
+    dockBody.innerHTML = emptyMessages[currentDockTab] || emptyMessages.terminal;
+    return;
+  }
+  const executedEvidence = activeInvestigation.experiments.filter(item => item.state === "executed");
+  const lines = [
+    "Investigation completed with real ModelShield evidence.",
+    `Dataset: ${activeInvestigation.dataset.type} (${activeInvestigation.dataset.split})`,
+    ...executedEvidence.map(item => `${item.challenge}: baseline=${item.baseline_score.toFixed(4)} candidate=${item.candidate_score.toFixed(4)} delta=${item.delta.toFixed(4)} status=${item.status.toUpperCase()}`),
+    `AI used: ${activeInvestigation.ai.actually_used ? "yes" : "no"}; fallback: ${activeInvestigation.ai.fallback_used ? "yes" : "no"}`,
+  ];
+  if (currentDockTab === "terminal") {
+    dockBody.innerHTML = createTerminalOutput(lines, "modelshield investigate release");
+  } else if (currentDockTab === "logs") {
+    dockBody.innerHTML = `<div style="color: var(--text-muted); font-size: 11px; line-height: 1.6;">${executedEvidence.map(item => `<div>Measured ${escapeHtml(item.challenge)}: baseline ${item.baseline_score.toFixed(4)}, candidate ${item.candidate_score.toFixed(4)}, delta ${item.delta.toFixed(4)}, ${escapeHtml(item.status)}.</div>`).join("")}</div>`;
+  } else {
+    dockBody.innerHTML = `<div style="color: var(--text-muted); font-size: 11px;">Investigation completed. No aggregate investigation release verdict is available; per-experiment deterministic statuses are shown in Model Comparison.</div>`;
+  }
+  return;
+
   const candidate = dashboardState.getSelectedCandidate();
   const decision = dashboardState.getReleaseDecision(candidate);
 
@@ -857,20 +883,80 @@ function renderDockContent() {
 }
 
 async function runReleaseGateWorkflow() {
-  currentView = "gate";
-  const navItems = document.querySelectorAll(".nav-item");
-  navItems.forEach(n => {
-    n.classList.toggle("active", n.getAttribute("data-view") === "gate");
-  });
+  const container = document.getElementById("view-content");
+  if (!container) return;
+  container.innerHTML = `<div class="placeholder-view"><div class="placeholder-title">ModelShield is investigating the candidate...</div><div class="placeholder-subtitle">Running real CIFAR-10 evaluation and bounded autonomous experiment selection.</div></div>`;
   try {
-    await hydrateDashboardFromApi();
+    const response = await fetch("/api/investigate", { method: "POST" });
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.detail || "Investigation could not be completed.");
+    activeInvestigation = payload;
+    populateLiveModelSelectors(payload);
+    currentView = "comparison";
+    document.querySelectorAll(".nav-item").forEach(item => item.classList.toggle("active", item.getAttribute("data-view") === "comparison"));
     syncAllUI();
   } catch (error) {
-    document.getElementById("view-content").innerHTML = `<div class="placeholder-view"><div class="placeholder-title">No live analysis available</div><div class="placeholder-subtitle">${error.message}</div></div>`;
+    container.innerHTML = `<div class="placeholder-view"><div class="placeholder-title">Investigation unavailable</div><div class="placeholder-subtitle">${escapeHtml(error.message || "The request could not be completed.")}</div></div>`;
   }
 
   currentDockTab = "terminal";
   const dockTabs = document.querySelectorAll(".dock-tab");
   dockTabs.forEach(t => t.classList.toggle("active", t.getAttribute("data-dock") === "terminal"));
   renderDockContent();
+}
+
+function populateLiveModelSelectors(investigation) {
+  const values = [
+    ["baseline-select", investigation.baseline?.name],
+    ["model-select", investigation.candidate?.name],
+  ];
+  values.forEach(([id, name]) => {
+    const select = document.getElementById(id);
+    if (!select) return;
+    select.innerHTML = "";
+    const option = document.createElement("option");
+    option.value = name || "";
+    option.textContent = name || "unavailable";
+    option.selected = true;
+    select.appendChild(option);
+    select.disabled = true;
+  });
+}
+
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>'"]/g, character => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;"
+  })[character]);
+}
+
+function formatParameters(parameters) {
+  const entries = Object.entries(parameters || {});
+  return entries.length ? entries.map(([key, value]) => `${escapeHtml(key)}=${escapeHtml(value)}`).join(", ") : "none";
+}
+
+function formatPercent(score) {
+  return typeof score === "number" ? `${(score * 100).toFixed(2)}%` : "—";
+}
+
+function renderInvestigation(container, investigation) {
+  const experiments = investigation.experiments || [];
+  const cards = experiments.map(experiment => {
+    const executed = experiment.state === "executed";
+    const status = executed ? String(experiment.status || "unknown").toUpperCase() : String(experiment.state || "unknown").toUpperCase();
+    const statusClass = experiment.status === "failure" ? "badge-block" : (experiment.status === "pass" ? "badge-pass" : "badge-review");
+    return `
+      <div class="gate-card" style="margin-bottom: 12px;">
+        <div class="gate-headline"><div class="gate-status-text"><span class="mono">${escapeHtml(experiment.number)}</span> ${escapeHtml(experiment.challenge)}</div><span class="badge ${statusClass}">${escapeHtml(status)}</span></div>
+        <div class="view-subtitle">Source: <strong>${escapeHtml(experiment.source)}</strong> · Parameters: <span class="mono">${formatParameters(experiment.parameters)}</span></div>
+        <div style="font-size: 11px; color: var(--text-muted); margin-top: 8px;"><strong>${experiment.source === "ai_investigation" ? "AI-generated rationale:" : "Experiment rationale:"}</strong> ${escapeHtml(experiment.rationale)}</div>
+        ${executed ? `<div class="gate-stats"><div>Deterministic baseline <strong>${formatPercent(experiment.baseline_score)}</strong></div><div>Deterministic candidate <strong>${formatPercent(experiment.candidate_score)}</strong></div><div>Deterministic delta <strong>${Number(experiment.delta).toFixed(4)}</strong></div></div>` : `<div style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">${escapeHtml(experiment.reason || "Proposal was not executed.")}</div>`}
+      </div>`;
+  }).join("");
+  const fallback = investigation.ai?.fallback_used;
+  const failures = investigation.verified_failures || [];
+  container.innerHTML = `
+    <div class="view-header"><div class="view-title"><i class="ri-radar-line"></i> Autonomous Release Investigation</div><div class="view-subtitle">Production Model: <strong>${escapeHtml(investigation.baseline?.name || "unavailable")}</strong> · Candidate Model: <strong>${escapeHtml(investigation.candidate?.name || "unavailable")}</strong> · ${escapeHtml(investigation.dataset?.type || "dataset")} ${escapeHtml(investigation.dataset?.split || "")}</div></div>
+    <div class="gate-card" style="margin-bottom: 12px;"><div class="gate-headline"><div class="gate-status-text">Investigation completed</div><span class="badge badge-review">${escapeHtml(investigation.termination_reason)}</span></div><div class="view-subtitle">Experiments: <strong>${escapeHtml(investigation.experiments_executed)}</strong> / ${escapeHtml(investigation.budget)} · Provider: <strong>${escapeHtml(investigation.ai?.provider_model || "unavailable")}</strong> · AI used: <strong>${investigation.ai?.actually_used ? "yes" : "no"}</strong> · Fallback: <strong>${fallback ? "yes" : "no"}</strong></div><div class="view-subtitle">AI chooses experiments. ModelShield measures the results.</div><div style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">${fallback ? "AI provider unavailable — deterministic investigation continued." : "AI provider proposal was used when an AI-selected experiment appears below."}</div></div>
+    ${cards || `<div class="placeholder-view"><div class="placeholder-title">No experiment evidence returned</div></div>`}
+    <div class="gate-card"><div class="gate-headline"><div class="gate-status-text">Verification and Failure Memory</div></div><div class="view-subtitle">${failures.length ? `${failures.length} verified failure(s) stored from this investigation.` : "No verified regression discovered within this investigation budget."}</div><div style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">${escapeHtml(investigation.release?.message || "Investigation completed.")}</div></div>`;
 }

@@ -64,9 +64,9 @@
         <span>Docs</span>
       </button>
 
-      <button class="btn-topbar-primary" id="btn-run-gate" title="Execute automated CI/CD Release Gating">
+      <button class="btn-topbar-primary" id="btn-run-gate" title="Run a real autonomous investigation on the release candidate">
         <i class="ri-play-line"></i>
-        <span>Run Release Gate</span>
+        <span>Investigate Release</span>
       </button>
     </div>
   </header>
@@ -77,9 +77,7 @@
       <label for="model-select" class="config-label">Candidate</label>
       <div class="select-wrapper">
         <select class="ide-select" id="model-select">
-          <option value="candidate-v2">candidate-v2 (Exploration Run)</option>
-          <option value="candidate-v3" selected>candidate-v3 (Release Candidate)</option>
-          <option value="candidate-v4">candidate-v4 (Patched Release)</option>
+          <option value="" selected>No analysis yet</option>
         </select>
         <i class="ri-arrow-down-s-line select-arrow"></i>
       </div>
@@ -89,7 +87,7 @@
       <label for="baseline-select" class="config-label">Baseline</label>
       <div class="select-wrapper">
         <select class="ide-select" id="baseline-select">
-          <option value="production-v1">production-v1 (Baseline)</option>
+          <option value="" selected>No analysis yet</option>
         </select>
         <i class="ri-arrow-down-s-line select-arrow"></i>
       </div>
@@ -188,7 +186,7 @@
           <i class="ri-home-4-line breadcrumb-home"></i>
           <span class="breadcrumb-item">modelshield</span>
           <span class="breadcrumb-sep">/</span>
-          <span class="breadcrumb-item" id="crumb-candidate">candidate-v3</span>
+          <span class="breadcrumb-item" id="crumb-candidate">no-analysis</span>
           <span class="breadcrumb-sep">/</span>
           <span class="breadcrumb-item active" id="crumb-view">model-comparison</span>
         </div>
@@ -253,10 +251,10 @@
   <footer class="statusbar">
     <div class="statusbar-left">
       <div class="status-item"><i class="ri-git-branch-line" style="color: var(--accent-blue);"></i> <span id="sb-branch">git: main</span></div>
-      <div class="status-item"><span style="color: var(--text-muted);">model:</span> <span class="status-item-highlight mono" id="sb-model">candidate-v3:v3</span></div>
-      <div class="status-item"><span style="color: var(--text-muted);">regressions:</span> <span class="status-item-highlight mono" id="sb-reg-count">5 active</span></div>
-      <div class="status-item"><span style="color: var(--text-muted);">policy:</span> <span style="color: var(--status-block);" class="mono" id="sb-policy">strict_block</span></div>
-      <div class="status-item"><span style="color: var(--text-muted);">ci_exit:</span> <span style="color: var(--status-block);" class="mono" id="sb-exit">1 (BLOCKED)</span></div>
+      <div class="status-item"><span style="color: var(--text-muted);">model:</span> <span class="status-item-highlight mono" id="sb-model">no analysis</span></div>
+      <div class="status-item"><span style="color: var(--text-muted);">regressions:</span> <span class="status-item-highlight mono" id="sb-reg-count">not evaluated</span></div>
+      <div class="status-item"><span style="color: var(--text-muted);">policy:</span> <span class="mono" id="sb-policy">unavailable</span></div>
+      <div class="status-item"><span style="color: var(--text-muted);">ci_exit:</span> <span class="mono" id="sb-exit">—</span></div>
     </div>
     <div class="statusbar-right">
       <div class="status-item"><span style="color: var(--text-muted);">Schema:</span> <span class="mono">v1.0</span></div>

@@ -10,7 +10,7 @@ export class WorkspaceLoader {
       containerId: "workspace-loader",
       onComplete: null,
       onError: null,
-      gifPath: "../agents/gif/idle.gif",
+      gifPath: "/agents_gif/idle.gif",
       totalDuration: 4800,
       ...options
     };
@@ -119,17 +119,14 @@ export class WorkspaceLoader {
       this.shortcutTickerEl.addEventListener("click", () => this.rotateShortcutManually());
     }
 
-    // Try alternate relative GIF path if primary fails to load
+    // An asset failure is non-fatal. Do not retry a missing URL indefinitely.
     const gifImg = loaderEl.querySelector(".loader-agent-gif");
     if (gifImg) {
       gifImg.onerror = () => {
-        if (gifImg.src.includes("../agents/gif/")) {
-          gifImg.src = "agents/gif/idle.gif";
-        } else if (gifImg.src.includes("agents/gif/")) {
-          gifImg.src = "../agents_gif/idle.gif";
-        } else if (gifImg.src.includes("agents_gif/")) {
-          gifImg.src = "agents_gif/idle.gif";
-        }
+        gifImg.onerror = null;
+        gifImg.removeAttribute("src");
+        gifImg.alt = "Agent visualization unavailable";
+        gifImg.style.display = "none";
       };
     }
   }

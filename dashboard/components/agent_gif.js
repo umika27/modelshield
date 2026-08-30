@@ -1,7 +1,7 @@
 /**
  * AgentGif Component
  * Displays animated agent GIF in topbar/header with a subtle cycle/switch button.
- * Automatically discovers GIF files in agents/gif/ (with fallback & preloading).
+ * Loads GIF files from ModelShield's canonical public asset route.
  */
 
 export class AgentGifComponent {
@@ -9,7 +9,7 @@ export class AgentGifComponent {
     this.container = containerElement;
     this.gifs = [];
     this.currentIndex = 0;
-    this.basePath = "../agents/gif/";
+    this.basePath = "/agents_gif/";
     this.imgElement = null;
     this.btnElement = null;
     
@@ -30,30 +30,18 @@ export class AgentGifComponent {
   }
 
   async discoverGifs() {
-    const candidateRegistries = [
-      "../agents/gif/registry.json",
-      "agents/gif/registry.json",
-      "../agents_gif/registry.json",
-      "agents_gif/registry.json"
-    ];
-
-    for (const regPath of candidateRegistries) {
-      try {
-        const response = await fetch(regPath);
-        if (response.ok) {
-          const list = await response.json();
-          if (Array.isArray(list) && list.length > 0) {
-            this.basePath = regPath.substring(0, regPath.lastIndexOf("/") + 1);
-            return list;
-          }
-        }
-      } catch (err) {
-        // Continue trying fallback paths if fetch fails
+    try {
+      const response = await fetch("/agents_gif/registry.json");
+      if (response.ok) {
+        const list = await response.json();
+        if (Array.isArray(list) && list.length > 0) return list;
       }
+    } catch (err) {
+      // Registry discovery is optional; use the canonical static list below.
     }
 
-    // Default auto-discovered list matching files in agents/gif/
-    this.basePath = "../agents/gif/";
+    // Registry unavailable: use the known canonical asset names without retrying URLs.
+    this.basePath = "/agents_gif/";
     return [
       "idle.gif",
       "analyse.gif",
@@ -98,20 +86,8 @@ export class AgentGifComponent {
 
     if (this.imgElement) {
       this.imgElement.onerror = () => {
-        // Attempt fallback paths if initial path resolution failed
-        if (this.basePath === "../agents/gif/") {
-          this.basePath = "agents/gif/";
-          this.imgElement.src = this.getGifUrl(currentGif);
-        } else if (this.basePath === "agents/gif/") {
-          this.basePath = "../agents_gif/";
-          this.imgElement.src = this.getGifUrl(currentGif);
-        } else if (this.basePath === "../agents_gif/") {
-          this.basePath = "agents_gif/";
-          this.imgElement.src = this.getGifUrl(currentGif);
-        } else {
-          // If all image loading attempts fail, hide the container gracefully
-          this.container.style.display = "none";
-        }
+        this.imgElement.onerror = null;
+        this.container.style.display = "none";
       };
     }
 

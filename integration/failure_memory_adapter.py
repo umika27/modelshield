@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import threading
 from pathlib import Path
 from typing import Any
 
@@ -93,10 +94,16 @@ class FailureMemoryAdapter:
 
     def __init__(self, db_path: str | Path = "modelshield.db") -> None:
         self.db_path = str(db_path)
-        self.conn = sqlite3.connect(self.db_path)
+        # The API keeps one adapter on ``app.state`` while FastAPI dispatches
+        # synchronous endpoints through worker threads. A single connection is
+        # required for ``:memory:`` databases, so use SQLite's opt-in cross-
+        # thread mode and serialize all adapter operations with this lock.
+        self._lock = threading.RLock()
+        self.conn = sqlite3.connect(self.db_path, check_same_thread=False)
         self.conn.row_factory = sqlite3.Row
-        self.conn.executescript(_SCHEMA)
-        self.conn.commit()
+        with self._lock:
+            self.conn.executescript(_SCHEMA)
+            self.conn.commit()
 
     def store(
         self,
@@ -119,43 +126,47 @@ class FailureMemoryAdapter:
         candidate = evaluation.candidate
         # Keep the original Failure Memory's write sequence atomic. A rejected
         # duplicate fingerprint must not leave an orphan evaluation behind.
-        with self.conn:
-            self.ensure_model(
-                candidate.model_id,
-                role="candidate",
-                reference=candidate.artifact_reference,
-            )
-            evaluation_id = self._save_evaluation(artifact)
-            failure_id = self._save_failure(artifact, evaluation_id, dataset_reference)
-            self._save_capsule(
-                failure_id,
-                artifact,
-                dataset_reference=dataset_reference,
-                preprocessing=preprocessing or {},
-                environment=environment or {},
-            )
+        with self._lock:
+            with self.conn:
+                self.ensure_model(
+                    candidate.model_id,
+                    role="candidate",
+                    reference=candidate.artifact_reference,
+                )
+                evaluation_id = self._save_evaluation(artifact)
+                failure_id = self._save_failure(artifact, evaluation_id, dataset_reference)
+                self._save_capsule(
+                    failure_id,
+                    artifact,
+                    dataset_reference=dataset_reference,
+                    preprocessing=preprocessing or {},
+                    environment=environment or {},
+                )
         return failure_id
 
     def ensure_model(self, model_id: str, *, role: str, reference: str = "") -> None:
         """Preserve Failure Memory's idempotent model registration behavior."""
-        self.conn.execute(
-            "INSERT OR IGNORE INTO models (model_id, role, reference) VALUES (?, ?, ?)",
-            (model_id, role, reference),
-        )
+        with self._lock:
+            self.conn.execute(
+                "INSERT OR IGNORE INTO models (model_id, role, reference) VALUES (?, ?, ?)",
+                (model_id, role, reference),
+            )
 
     def get_failure(self, failure_id: int) -> dict[str, Any] | None:
         """Return a persisted failure record with decoded JSON parameters."""
-        row = self.conn.execute(
-            "SELECT * FROM failures WHERE failure_id = ?", (failure_id,)
-        ).fetchone()
+        with self._lock:
+            row = self.conn.execute(
+                "SELECT * FROM failures WHERE failure_id = ?", (failure_id,)
+            ).fetchone()
         return self._row_to_dict(row) if row else None
 
     def get_capsule(self, failure_id: int) -> dict[str, Any] | None:
         """Return the latest reproducibility capsule for a stored failure."""
-        row = self.conn.execute(
-            "SELECT * FROM capsules WHERE failure_id = ? ORDER BY created_at DESC LIMIT 1",
-            (failure_id,),
-        ).fetchone()
+        with self._lock:
+            row = self.conn.execute(
+                "SELECT * FROM capsules WHERE failure_id = ? ORDER BY created_at DESC LIMIT 1",
+                (failure_id,),
+            ).fetchone()
         if row is None:
             return None
         data = dict(row)
@@ -178,7 +189,9 @@ class FailureMemoryAdapter:
             query += " WHERE verified = ?"
             params = (int(verified),)
         query += " ORDER BY created_at DESC, failure_id DESC"
-        return [self._row_to_dict(row) for row in self.conn.execute(query, params).fetchall()]
+        with self._lock:
+            rows = self.conn.execute(query, params).fetchall()
+        return [self._row_to_dict(row) for row in rows]
 
     def list_active_regressions(self) -> list[dict[str, Any]]:
         """Return verified historical failures eligible for deterministic replay."""
@@ -186,7 +199,8 @@ class FailureMemoryAdapter:
 
     def close(self) -> None:
         """Close the owned SQLite connection."""
-        self.conn.close()
+        with self._lock:
+            self.conn.close()
 
     def _save_evaluation(self, artifact: VerifiedFailureArtifact) -> int:
         result = artifact.evaluation
