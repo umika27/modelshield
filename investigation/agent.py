@@ -4,12 +4,15 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass
+import hashlib
 import json
 from typing import Protocol, runtime_checkable
 
 from adaptive import DeterministicInvestigator
 from core.schemas import ChallengeSpec, EvaluationResult, ModelMetadata
 from integration.contracts import ModelIdentity
+
+from .provider import InvestigationLLMClient, parse_provider_proposal
 
 
 @dataclass(frozen=True)
@@ -167,3 +170,132 @@ class DeterministicInvestigationAgent:
         if not candidates:
             return None
         return InvestigationAction(candidates[0], "Deterministic fallback selected this canonical follow-up.")
+
+
+class AIInvestigationAgent:
+    """External-model-backed policy that remains bounded by Stage 5A validation.
+
+    Provider output is only a proposal. Scores, status, verification, memory,
+    and release decisions remain exclusively deterministic ModelShield work.
+    """
+
+    _CONSTRAINTS = {
+        "clean": "{}",
+        "blur": "severity: 0.0 to 1.0",
+        "noise": "level: 0.0 to 1.0",
+        "brightness": "factor: 0.0 to 2.0",
+        "rotation": "degrees: -180 to 180",
+        "low_light": "brightness: 0.0 to 1.0",
+        "low_light_blur": "brightness: 0.0 to 1.0; blur: 0.0 to 1.0",
+    }
+
+    def __init__(
+        self,
+        client: InvestigationLLMClient,
+        *,
+        fallback: InvestigationAgent | None = None,
+    ) -> None:
+        if not isinstance(client, InvestigationLLMClient):
+            raise TypeError("client must implement InvestigationLLMClient")
+        if fallback is not None and not isinstance(fallback, InvestigationAgent):
+            raise TypeError("fallback must implement InvestigationAgent")
+        self.client = client
+        self.fallback = fallback or DeterministicInvestigationAgent()
+
+    def choose_next(
+        self,
+        evidence_history: Sequence[InvestigationEvidence],
+        available_challenges: Sequence[ChallengeSpec],
+        remaining_budget: int,
+    ) -> InvestigationAction | None:
+        history = list(evidence_history)
+        challenges = list(available_challenges)
+        if any(not isinstance(item, InvestigationEvidence) for item in history):
+            raise TypeError("evidence_history must contain InvestigationEvidence objects")
+        if any(not isinstance(item, ChallengeSpec) for item in challenges):
+            raise TypeError("available_challenges must contain ChallengeSpec objects")
+        if isinstance(remaining_budget, bool) or not isinstance(remaining_budget, int):
+            raise TypeError("remaining_budget must be an integer")
+        if remaining_budget <= 0:
+            return None
+
+        prompt = self.build_prompt(history, challenges, remaining_budget)
+        try:
+            proposal = parse_provider_proposal(self.client.propose(prompt))
+        # The client is an optional external boundary. Any ordinary provider
+        # exception must leave deterministic investigation available.
+        except Exception:
+            return self.fallback.choose_next(history, challenges, remaining_budget)
+        if proposal.stop:
+            return None
+        assert proposal.challenge_type is not None and proposal.parameters is not None
+        return InvestigationAction(
+            challenge=self._challenge_spec(proposal.challenge_type, proposal.parameters, proposal.rationale, history, challenges),
+            rationale=proposal.rationale,
+        )
+
+    @classmethod
+    def build_prompt(
+        cls,
+        evidence_history: Sequence[InvestigationEvidence],
+        available_challenges: Sequence[ChallengeSpec],
+        remaining_budget: int,
+    ) -> str:
+        """Build a compact prompt whose numeric claims are all supplied evidence."""
+        allowed = sorted({item.type for item in available_challenges})
+        constraints = [f"- {name}: {cls._CONSTRAINTS.get(name, 'canonical parameters as supplied')}" for name in allowed]
+        history = [
+            "\n".join(
+                (
+                    f"{index}. challenge: {item.challenge.type}",
+                    f"   parameters: {json.dumps(item.challenge.parameters, sort_keys=True)}",
+                    f"   baseline_score: {item.baseline_score}",
+                    f"   candidate_score: {item.candidate_score}",
+                    f"   delta: {item.delta}",
+                    f"   status: {item.status}",
+                    f"   metric: {item.metric_name}",
+                    f"   threshold: {item.threshold} ({item.threshold_comparison})",
+                    f"   seed: {item.seed}",
+                )
+            )
+            for index, item in enumerate(evidence_history, start=1)
+        ]
+        return "\n".join(
+            (
+                "You are ModelShield's investigation policy.",
+                "Choose the most informative next experiment for candidate regressions.",
+                "Use only supplied evidence. Do not predict scores, invent metrics, determine truth, verify failures, write memory, or decide release status.",
+                "Choose only an allowed challenge and return JSON only.",
+                'Action shape: {"stop":false,"challenge_type":"...","parameters":{},"rationale":"..."}.',
+                'Stop shape: {"stop":true,"rationale":"..."}.',
+                f"REMAINING EXPERIMENT BUDGET: {remaining_budget}",
+                "AVAILABLE CANONICAL CHALLENGES:",
+                *constraints,
+                "EXPERIMENT HISTORY:",
+                *(history or ["No experiment evidence has been observed."]),
+            )
+        )
+
+    @staticmethod
+    def _challenge_spec(
+        challenge_type: str,
+        parameters: dict[str, object],
+        rationale: str,
+        history: Sequence[InvestigationEvidence],
+        available_challenges: Sequence[ChallengeSpec],
+    ) -> ChallengeSpec:
+        parent = history[-1].challenge if history else None
+        seed = parent.seed if parent is not None else (available_challenges[0].seed if available_challenges else 42)
+        normalized = json.dumps(parameters, sort_keys=True, separators=(",", ":"))
+        source = f"{parent.challenge_id if parent else 'root'}|{challenge_type}|{normalized}|{seed}"
+        challenge_id = f"ai-{hashlib.sha256(source.encode('utf-8')).hexdigest()[:12]}"
+        return ChallengeSpec(
+            challenge_id=challenge_id,
+            type=challenge_type,
+            parameters=parameters,
+            parent_challenge_id=parent.challenge_id if parent else None,
+            source="ai_investigation",
+            reason=rationale,
+            reproducible=True,
+            seed=seed,
+        )

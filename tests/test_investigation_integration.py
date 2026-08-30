@@ -16,7 +16,7 @@ from dataset_adapters import ImageFolderAdapter
 from integration.failure_memory_adapter import FailureMemoryAdapter
 from integration.investigation_service import InvestigationService
 from integration.service import AnalysisRequest, DatasetConfig, ModelConfig, ModelShieldService
-from investigation import InvestigationAction, InvestigationEvidence
+from investigation import AIInvestigationAgent, InvestigationAction, InvestigationEvidence
 from model_adapters import AdapterMetadata, ModelAdapter, PreprocessingSpec
 
 
@@ -60,6 +60,16 @@ class ScriptedAgent:
         del available_challenges, remaining_budget
         self.observations.append(tuple(evidence_history))
         return self.actions.pop(0) if self.actions else None
+
+
+class ProviderClient:
+    def __init__(self, responses) -> None:
+        self.responses = list(responses)
+        self.prompts: list[str] = []
+
+    def propose(self, prompt: str) -> dict[str, object]:
+        self.prompts.append(prompt)
+        return self.responses.pop(0)
 
 
 class RecordingService(ModelShieldService):
@@ -114,6 +124,26 @@ def test_invalid_parameters_are_rejected_before_execution() -> None:
     assert result.trace[0].state == "rejected"
     assert result.trace[0].evaluation is None
     assert result.termination_reason == "agent_terminated"
+
+
+@pytest.mark.parametrize(
+    "proposal",
+    [
+        {"stop": False, "challenge_type": "fog", "parameters": {}, "rationale": "Try fog."},
+        {"stop": False, "challenge_type": "blur", "parameters": {"severity": 5}, "rationale": "Try stronger blur."},
+    ],
+)
+def test_ai_invalid_proposals_are_rejected_by_existing_stage_5a_validation(proposal) -> None:
+    service = RecordingService()
+    agent = AIInvestigationAgent(ProviderClient([proposal, {"stop": True, "rationale": "Done."}]))
+    result = InvestigationService(service).investigate(
+        request(), initial_action=action("initial", "low_light", {"brightness": 0.5}),
+        agent=agent, available_challenges=[spec("blur", "blur", {"severity": 0.2})], experiment_budget=2,
+    )
+    assert result.experiments_executed == 1
+    assert [entry.state for entry in result.trace] == ["executed", "rejected"]
+    assert result.trace[1].evaluation is None
+    assert service.replay_flags == [False]
 
 
 def test_agent_none_terminates_and_budget_caps_unique_actions() -> None:
@@ -201,3 +231,27 @@ def test_vertical_real_runner_failure_verifies_and_enters_memory(tmp_path, monke
     assert result.evaluations[0].status == "failure"
     assert memory.list_active_regressions()[0]["verified"] is True
     assert result.trace[0].state == "executed"
+
+
+def test_ai_action_drives_real_runner_and_preserves_failure_memory_path(tmp_path, monkeypatch) -> None:
+    root = _images(tmp_path / "images")
+    models = iter([TinyAdapter(MeanModel()), TinyAdapter(MeanModel(forced_class=0))] * 4)
+    monkeypatch.setattr("integration.service.create_dataset_adapter", lambda **_: ImageFolderAdapter(root=root))
+    monkeypatch.setattr("integration.service.create_model_adapter", lambda **_: next(models))
+    memory = FailureMemoryAdapter(tmp_path / "memory.db")
+    client = ProviderClient([{"stop": False, "challenge_type": "blur", "parameters": {"severity": 0.2}, "rationale": "Test blur after observed degradation."}])
+    result = InvestigationService(ModelShieldService(memory=memory)).investigate(
+        AnalysisRequest(
+            baseline=ModelConfig("baseline", "v1", "tiny"), candidate=ModelConfig("candidate", "v2", "tiny"),
+            dataset=DatasetConfig("tiny", str(root)), failure_threshold=-0.15, verification_runs=1, batch_size=2,
+        ),
+        initial_action=action("real", "low_light", {"brightness": 0.8}),
+        agent=AIInvestigationAgent(client),
+        available_challenges=[spec("available-blur", "blur", {"severity": 0.2})], experiment_budget=2,
+    )
+    assert result.experiments_executed == 2
+    assert result.trace[1].action.challenge.source == "ai_investigation"
+    assert all(entry.evaluation is not None for entry in result.trace)
+    assert all(item.status == "failure" for item in result.evaluations)
+    assert len(memory.list_active_regressions()) == 2
+    assert "baseline_score:" in client.prompts[0]
