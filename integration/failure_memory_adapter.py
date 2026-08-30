@@ -78,7 +78,7 @@ CREATE INDEX IF NOT EXISTS idx_failures_condition ON failures(condition);
 """
 
 
-def _severity(delta: float) -> str:
+def classify_failure_memory_severity(delta: float) -> str:
     """Use Shyalona's existing internal minor/major/critical bands."""
     magnitude = abs(delta)
     if magnitude >= 0.30:
@@ -230,7 +230,7 @@ class FailureMemoryAdapter:
                 result.baseline_score,
                 result.candidate_score,
                 result.delta,
-                _severity(result.delta),
+                classify_failure_memory_severity(result.delta),
                 1,
                 result.candidate.model_id,
                 dataset_reference,
