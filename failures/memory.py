@@ -40,14 +40,18 @@ class FailureMemory:
         )
         self.conn.commit()
 
-    def save_evaluation(self, result_dict: dict[str, Any]) -> int:
-        """Persist a raw EvaluationResult row, return its evaluation_id."""
+    def save_evaluation(self, result_dict: dict[str, Any], owner_uid: Optional[str] = None) -> int:
+        """Persist a raw EvaluationResult row, return its evaluation_id.
+
+        owner_uid: the Firebase Auth UID of the user who ran this evaluation.
+        Optional so existing calls (tests, demos without login) still work.
+        """
         cur = self.conn.execute(
             """
             INSERT INTO evaluations
                 (experiment_id, model_id, condition, parameters,
-                 baseline_score, candidate_score, delta, status, seed)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 baseline_score, candidate_score, delta, status, seed, owner_uid)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 result_dict["experiment_id"],
@@ -59,19 +63,24 @@ class FailureMemory:
                 result_dict["delta"],
                 result_dict["status"],
                 result_dict.get("seed"),
+                owner_uid,
             ),
         )
         self.conn.commit()
         return cur.lastrowid
 
-    def save_failure(self, record: FailureRecord) -> int:
-        """Persist a FailureRecord (unverified by default), return failure_id."""
+    def save_failure(self, record: FailureRecord, owner_uid: Optional[str] = None) -> int:
+        """Persist a FailureRecord (unverified by default), return failure_id.
+
+        owner_uid: the Firebase Auth UID of the user this failure belongs to.
+        """
         cur = self.conn.execute(
             """
             INSERT INTO failures
                 (evaluation_id, condition, parameters, baseline_score,
-                 candidate_score, delta, severity, verified, model_id, dataset_ref)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 candidate_score, delta, severity, verified, model_id,
+                 dataset_ref, owner_uid)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 record.evaluation_id,
@@ -84,6 +93,7 @@ class FailureMemory:
                 int(record.verified),
                 record.model_id,
                 record.dataset_ref,
+                owner_uid,
             ),
         )
         self.conn.commit()
@@ -114,8 +124,14 @@ class FailureMemory:
         condition: Optional[str] = None,
         severity: Optional[str] = None,
         model_id: Optional[str] = None,
+        owner_uid: Optional[str] = None,
     ) -> list[dict[str, Any]]:
-        """Filtered list — pass any combination of filters."""
+        """Filtered list — pass any combination of filters.
+
+        Pass owner_uid to get only one user's failures — this is what your
+        server should always pass once a user is logged in, so users never
+        see each other's data.
+        """
         clauses, params = [], []
         if verified is not None:
             clauses.append("verified = ?")
@@ -129,6 +145,9 @@ class FailureMemory:
         if model_id is not None:
             clauses.append("model_id = ?")
             params.append(model_id)
+        if owner_uid is not None:
+            clauses.append("owner_uid = ?")
+            params.append(owner_uid)
 
         query = "SELECT * FROM failures"
         if clauses:
