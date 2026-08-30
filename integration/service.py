@@ -147,7 +147,14 @@ class ModelShieldService:
 
     def _run_real_evaluation(self, request: AnalysisRequest, evaluation_id: str) -> EvaluationResult:
         """Execute the existing real adapters/experiment runner; no synthetic scores."""
-        dataset = create_dataset_adapter(dataset_type=request.dataset.dataset_type, root=Path(request.dataset.root), split=request.dataset.split, download=False)
+        dataset_kwargs: dict[str, object] = {"split": request.dataset.split}
+        if request.dataset.dataset_type == "cifar10":
+            dataset_kwargs["download"] = False
+        dataset = create_dataset_adapter(
+            dataset_type=request.dataset.dataset_type,
+            root=Path(request.dataset.root),
+            **dataset_kwargs,
+        )
         dataset.load()
         classes = dataset.metadata.num_classes
         baseline_metadata = _metadata(request.baseline, "baseline")

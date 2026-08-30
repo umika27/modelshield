@@ -9,7 +9,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
+from dataset_adapters.exceptions import DatasetAdapterError
+from experiments.exceptions import ExperimentError
 from integration.service import AnalysisRequest, DatasetConfig, ModelConfig, ModelShieldService
+from model_adapters.exceptions import ModelAdapterError
 
 
 class ModelRequest(BaseModel):
@@ -62,7 +65,10 @@ def create_app(service: ModelShieldService | None = None) -> FastAPI:
 
     @app.post("/api/analyze")
     def analyze(request: AnalyzeRequest):
-        return app.state.service.run_analysis(request.to_service_request()).to_dict()
+        try:
+            return app.state.service.run_analysis(request.to_service_request()).to_dict()
+        except (DatasetAdapterError, ModelAdapterError, ExperimentError, ValueError) as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
 
     @app.get("/api/analysis/latest")
     def latest_analysis():

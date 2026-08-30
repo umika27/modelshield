@@ -856,13 +856,18 @@ function renderDockContent() {
   }
 }
 
-function runReleaseGateWorkflow() {
+async function runReleaseGateWorkflow() {
   currentView = "gate";
   const navItems = document.querySelectorAll(".nav-item");
   navItems.forEach(n => {
     n.classList.toggle("active", n.getAttribute("data-view") === "gate");
   });
-  syncAllUI();
+  try {
+    await hydrateDashboardFromApi();
+    syncAllUI();
+  } catch (error) {
+    document.getElementById("view-content").innerHTML = `<div class="placeholder-view"><div class="placeholder-title">No live analysis available</div><div class="placeholder-subtitle">${error.message}</div></div>`;
+  }
 
   currentDockTab = "terminal";
   const dockTabs = document.querySelectorAll(".dock-tab");

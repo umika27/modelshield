@@ -70,6 +70,19 @@ def test_api_uses_the_injected_shared_service_and_exposes_dashboard_fields():
     assert endpoints["/api/analysis/latest"]()["analysis_id"] == payload["analysis_id"]
 
 
+def test_latest_analysis_has_every_field_consumed_by_live_dashboard():
+    service = ModelShieldService(evaluator=_evaluator)
+    payload = service.run_analysis(_request()).to_dict()
+    assert payload["condition"]["type"] == "low_light_blur"
+    assert isinstance(payload["condition"]["parameters"], dict)
+    assert all(isinstance(payload["metric"][key], float) for key in ("baseline_score", "candidate_score", "delta"))
+    assert payload["verification"]["verified"] is True
+    assert payload["failure"]["fingerprint"].startswith("sha256:")
+    assert payload["failure"]["severity"] in {"LOW", "MEDIUM", "HIGH", "CRITICAL"}
+    assert payload["release"]["verdict"] in {"PASS", "REVIEW", "BLOCK"}
+    assert payload["release"]["candidate"] == {"model_id": "candidate:v2", "name": "candidate", "version": "v2"}
+
+
 def test_cli_uses_shared_service_without_release_policy_logic(monkeypatch):
     service = ModelShieldService(evaluator=_evaluator)
     monkeypatch.setattr("cli.main.ModelShieldService", lambda: service)
