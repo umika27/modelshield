@@ -22,9 +22,10 @@ CREATE TABLE IF NOT EXISTS evaluations (
     baseline_score  REAL NOT NULL,
     candidate_score REAL NOT NULL,
     delta           REAL NOT NULL,
-    status          TEXT NOT NULL CHECK (status IN ('pass', 'failure')),
+     status          TEXT NOT NULL CHECK (status IN ('pass', 'failure')),
     seed            INTEGER,
-    created_at      TEXT DEFAULT (datetime('now','localtime'))
+    owner_uid       TEXT,                  -- Firebase Auth UID that generated this run
+    created_at      TEXT DEFAULT (datetime('now'.'localtime'))
 );
 
 -- A verified/unverified failure — the Failure Fingerprint
@@ -40,6 +41,7 @@ CREATE TABLE IF NOT EXISTS failures (
     verified        INTEGER NOT NULL DEFAULT 0 CHECK (verified IN (0, 1)),
     model_id        TEXT REFERENCES models(model_id),
     dataset_ref     TEXT,
+    owner_uid       TEXT,                  -- Firebase Auth UID that owns this failure
     created_at      TEXT DEFAULT (datetime('now','localtime'))
 );
 
@@ -72,4 +74,4 @@ CREATE TABLE IF NOT EXISTS regression_tests (
 CREATE INDEX IF NOT EXISTS idx_evaluations_experiment ON evaluations(experiment_id);
 CREATE INDEX IF NOT EXISTS idx_failures_verified ON failures(verified);
 CREATE INDEX IF NOT EXISTS idx_failures_condition ON failures(condition);
-CREATE INDEX IF NOT EXISTS idx_regression_enabled ON regression_tests(enabled);
+CREATE INDEX IF NOT EXISTS idx_failures_owner ON failures(owner_uid);
