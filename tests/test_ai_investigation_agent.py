@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+from io import BytesIO
+from urllib.error import HTTPError
 
 import pytest
 
@@ -153,6 +155,7 @@ def test_http_client_parses_json_only_content_without_network(monkeypatch) -> No
     def fake_urlopen(request, timeout):
         seen["url"], seen["timeout"] = request.full_url, timeout
         seen["body"] = json.loads(request.data.decode())
+        seen["headers"] = request.headers
         return Response()
 
     monkeypatch.setattr("investigation.provider.urlopen", fake_urlopen)
@@ -162,3 +165,32 @@ def test_http_client_parses_json_only_content_without_network(monkeypatch) -> No
     assert seen["timeout"] == 3
     assert seen["body"]["temperature"] == 0
     assert seen["body"]["response_format"] == {"type": "json_object"}
+    assert seen["headers"].get("Authorization") == "Bearer test-key"
+    assert seen["headers"].get("Content-type") == "application/json"
+    assert seen["headers"].get("Accept") == "application/json"
+    assert seen["headers"].get("User-agent") == "ModelShield/1.0"
+
+
+def test_http_error_includes_redacted_provider_body(monkeypatch) -> None:
+    def fake_urlopen(request, timeout):
+        del timeout
+        raise HTTPError(
+            request.full_url,
+            403,
+            "Forbidden",
+            hdrs=None,
+            fp=BytesIO(b"provider blocked secret-key with error 1010"),
+        )
+
+    monkeypatch.setattr("investigation.provider.urlopen", fake_urlopen)
+    client = OpenAICompatibleHTTPClient(
+        base_url="https://example.invalid/v1",
+        api_key="secret-key",
+        model="test-model",
+    )
+    with pytest.raises(InvestigationProviderError) as caught:
+        client.propose("grounded prompt")
+    assert "HTTP 403: Forbidden" in str(caught.value)
+    assert "error 1010" in str(caught.value)
+    assert "secret-key" not in str(caught.value)
+    assert "[REDACTED]" in str(caught.value)

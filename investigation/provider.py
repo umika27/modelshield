@@ -101,13 +101,21 @@ class OpenAICompatibleHTTPClient:
         request = Request(
             self._endpoint(),
             data=body,
-            headers={"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"},
+            headers={
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+                "User-Agent": "ModelShield/1.0",
+            },
             method="POST",
         )
         try:
             with urlopen(request, timeout=self.timeout) as response:  # nosec B310 - explicit configured endpoint
                 payload = json.loads(response.read().decode("utf-8"))
-        except (HTTPError, URLError, TimeoutError, OSError) as exc:
+        except HTTPError as exc:
+            detail = self._http_error_detail(exc)
+            raise InvestigationProviderError(f"LLM request failed: HTTP {exc.code}: {exc.reason}{detail}") from exc
+        except (URLError, TimeoutError, OSError) as exc:
             raise InvestigationProviderError(f"LLM request failed: {exc}") from exc
         except (UnicodeDecodeError, json.JSONDecodeError) as exc:
             raise InvestigationProviderError("LLM response was not valid JSON") from exc
@@ -123,6 +131,15 @@ class OpenAICompatibleHTTPClient:
     def _endpoint(self) -> str:
         suffix = "/chat/completions"
         return self.base_url if self.base_url.endswith(suffix) else f"{self.base_url}{suffix}"
+
+    def _http_error_detail(self, error: HTTPError) -> str:
+        """Return a short provider body while never exposing configured credentials."""
+        try:
+            body = error.read().decode("utf-8", errors="replace")
+        except OSError:
+            return ""
+        body = " ".join(body.split()).replace(self.api_key, "[REDACTED]")
+        return f" - {body[:500]}" if body else ""
 
     @staticmethod
     def _assistant_content(payload: object) -> str:
