@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from torch import nn
+from torch import Tensor, nn
 
 from .preprocessing import PreprocessingSpec
 
@@ -49,6 +49,10 @@ class ModelAdapter(ABC):
     @abstractmethod
     def preprocessing(self) -> PreprocessingSpec:
         """Describe inference preprocessing after image-space challenges."""
+
+    @abstractmethod
+    def preprocess(self, images: Tensor) -> Tensor:
+        """Convert canonical challenged images to this model's input representation."""
 
     @staticmethod
     def normalize_path(path: str | Path | None) -> Path | None:
