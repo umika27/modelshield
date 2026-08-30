@@ -137,3 +137,21 @@ class ReleaseDecision:
                 for finding in self.findings
             ],
         }
+
+
+@dataclass(frozen=True)
+class RegressionReplayResult:
+    historical_failure_fingerprint: str
+    source_failure_id: int | None
+    condition: dict[str, Any] | None
+    evaluation: EvaluationResult | None
+    outcome: str
+    reason: str | None = None
+
+
+@dataclass(frozen=True)
+class AnalysisRun:
+    analysis_id: str
+    current_evaluation: EvaluationResult
+    historical_replays: tuple[RegressionReplayResult, ...]
+    release_decision: ReleaseDecision

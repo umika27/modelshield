@@ -10,7 +10,7 @@ from uuid import uuid4
 from core.schemas import ChallengeSpec, EvaluationResult, ModelMetadata
 from dataset_adapters import create_dataset_adapter
 from experiments import ComparisonExperimentRunner, ExperimentConfig
-from integration.contracts import ModelIdentity, PublicSeverity, ReleaseDecision, VerifiedFailureArtifact
+from integration.contracts import AnalysisRun, ModelIdentity, PublicSeverity, RegressionReplayResult, ReleaseDecision, VerifiedFailureArtifact
 from integration.failure_memory_adapter import FailureMemoryAdapter
 from integration.release_adapter import ReleaseDecisionAdapter, ReleaseEvidence
 from model_adapters import create_model_adapter
@@ -61,6 +61,7 @@ class AnalysisResult:
     failure_fingerprint: str | None
     severity: str | None
     release: ReleaseDecision
+    historical_replays: tuple[RegressionReplayResult, ...] = ()
 
     def to_dict(self) -> dict[str, object]:
         result = self.evaluation
@@ -77,6 +78,7 @@ class AnalysisResult:
             "verification": {"required": self.verification_required, "verified": self.verification_verified, "runs": self.verification_runs, "successful_reproductions": self.successful_reproductions},
             "failure": {"fingerprint": self.failure_fingerprint, "severity": self.severity},
             "release": self.release.to_dict(),
+            "historical_replays": [{"fingerprint": replay.historical_failure_fingerprint, "source_failure_id": replay.source_failure_id, "condition": replay.condition, "evaluation": replay.evaluation.to_dict() if replay.evaluation else None, "outcome": replay.outcome, "reason": replay.reason} for replay in self.historical_replays],
             "reproducibility": {"seed": result.seed},
         }
 
@@ -99,7 +101,7 @@ class ModelShieldService:
         self.release_adapter = release_adapter or ReleaseDecisionAdapter()
         self.latest_result: AnalysisResult | None = None
 
-    def run_analysis(self, request: AnalysisRequest) -> AnalysisResult:
+    def run_analysis(self, request: AnalysisRequest, *, replay_regressions: bool = True) -> AnalysisResult:
         """Run the canonical deterministic pipeline for one requested condition."""
         # Verification requires repeated runs to retain the same experiment
         # identity. Generate it once when the caller did not provide one.
@@ -109,9 +111,11 @@ class ModelShieldService:
         if not isinstance(evaluation, EvaluationResult):
             raise TypeError("evaluator must return an EvaluationResult")
         candidate, baseline = _identities(evaluation)
+        replays = self._run_historical_replays(request) if replay_regressions else ()
+        replay_evidence = [self._replay_evidence(replay) for replay in replays if replay.evaluation and replay.evaluation.status == "failure"]
         if evaluation.status != "failure":
-            release = self.release_adapter.decide([], candidate=candidate, baseline=baseline)
-            result = AnalysisResult(str(uuid4()), evaluation, request.dataset, False, None, 0, 0, None, None, release)
+            release = self.release_adapter.decide(replay_evidence, candidate=candidate, baseline=baseline)
+            result = AnalysisResult(str(uuid4()), evaluation, request.dataset, False, None, 0, 0, None, None, release, replays)
             self.latest_result = result
             return result
 
@@ -130,8 +134,8 @@ class ModelShieldService:
                 candidate=candidate,
                 baseline=baseline,
             )
-            release = self.release_adapter.decide([evidence])
-            result = AnalysisResult(str(uuid4()), evaluation, request.dataset, True, False, verification.runs, verification.successful_reproductions, None, None, release)
+            release = self.release_adapter.decide([evidence, *replay_evidence])
+            result = AnalysisResult(str(uuid4()), evaluation, request.dataset, True, False, verification.runs, verification.successful_reproductions, None, None, release, replays)
             self.latest_result = result
             return result
 
@@ -140,10 +144,38 @@ class ModelShieldService:
         stored = self.memory.get_failure(failure_id)
         assert stored is not None
         evidence = ReleaseEvidence.from_failure_memory(stored, candidate=candidate, baseline=baseline)
-        release = self.release_adapter.decide([evidence])
-        result = AnalysisResult(str(uuid4()), evaluation, request.dataset, True, True, verification.runs, verification.successful_reproductions, artifact.failure_fingerprint, evidence.severity.value, release)
+        release = self.release_adapter.decide([evidence, *replay_evidence])
+        result = AnalysisResult(str(uuid4()), evaluation, request.dataset, True, True, verification.runs, verification.successful_reproductions, artifact.failure_fingerprint, evidence.severity.value, release, replays)
         self.latest_result = result
         return result
+
+    def _run_historical_replays(self, request: AnalysisRequest) -> tuple[RegressionReplayResult, ...]:
+        seen, results = set(), []
+        for record in self.memory.list_active_regressions():
+            fingerprint = record.get("fingerprint", "unknown")
+            if fingerprint in seen: continue
+            seen.add(fingerprint)
+            parameters = record.get("parameters")
+            condition = record.get("condition")
+            if not isinstance(condition, str) or not isinstance(parameters, dict):
+                results.append(RegressionReplayResult(fingerprint, record.get("failure_id"), None, None, "SKIPPED", "Historical condition cannot be reconstructed.")); continue
+            if condition not in {"clean", "blur", "noise", "brightness", "rotation", "low_light", "low_light_blur"}:
+                results.append(RegressionReplayResult(fingerprint, record.get("failure_id"), {"type": condition, "parameters": parameters}, None, "SKIPPED", "Unsupported historical challenge type.")); continue
+            seed = request.seed
+            capsule = self.memory.get_capsule(record["failure_id"])
+            if capsule and isinstance(capsule.get("seed"), int): seed = capsule["seed"]
+            replay_request = replace(request, challenge_type=condition, challenge_parameters=parameters, seed=seed)
+            try:
+                evaluation = self._evaluator(replay_request, f"replay-{uuid4().hex}")
+                results.append(RegressionReplayResult(fingerprint, record.get("failure_id"), {"type": condition, "parameters": parameters, "seed": seed}, evaluation, "FAIL" if evaluation.status == "failure" else "PASS"))
+            except Exception as exc:
+                results.append(RegressionReplayResult(fingerprint, record.get("failure_id"), {"type": condition, "parameters": parameters, "seed": seed}, None, "SKIPPED", str(exc)))
+        return tuple(results)
+
+    def _replay_evidence(self, replay: RegressionReplayResult) -> ReleaseEvidence:
+        assert replay.evaluation is not None
+        candidate, baseline = _identities(replay.evaluation)
+        return ReleaseEvidence(replay.historical_failure_fingerprint, replay.evaluation.baseline_score, replay.evaluation.candidate_score, PublicSeverity.HIGH, True, candidate, baseline)
 
     def _run_real_evaluation(self, request: AnalysisRequest, evaluation_id: str) -> EvaluationResult:
         """Execute the existing real adapters/experiment runner; no synthetic scores."""

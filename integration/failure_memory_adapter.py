@@ -180,6 +180,10 @@ class FailureMemoryAdapter:
         query += " ORDER BY created_at DESC, failure_id DESC"
         return [self._row_to_dict(row) for row in self.conn.execute(query, params).fetchall()]
 
+    def list_active_regressions(self) -> list[dict[str, Any]]:
+        """Return verified historical failures eligible for deterministic replay."""
+        return self.list_failures(verified=True)
+
     def close(self) -> None:
         """Close the owned SQLite connection."""
         self.conn.close()
