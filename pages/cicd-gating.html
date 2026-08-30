@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CI/CD Gating — ModelShield</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="subpage.css">
+</head>
+<body data-theme="dark">
+  <div class="grid-backdrop"></div>
+
+  <header class="subpage-nav">
+    <div class="nav-container">
+      <a href="../index.html" class="brand">
+        <div class="brand-shield-icon"><i class="ri-shield-keyhole-line"></i></div>
+        <span class="brand-text">ModelShield</span>
+      </a>
+      <div class="nav-center-links">
+        <a href="../index.html" class="nav-back-link">
+          <i class="ri-arrow-left-line"></i>
+          <span data-i18n="nav.returnHome">Back to Overview</span>
+        </a>
+      </div>
+      <div class="nav-right-actions">
+        <a href="../dashboard/index.html" class="nav-btn-primary">
+          <span data-i18n="nav.workspace">Go to Workspace</span>
+          <i class="ri-arrow-right-line"></i>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="subpage-main">
+    <div class="subpage-breadcrumb mono">
+      <a href="../index.html">ModelShield</a> <span>/</span> <span class="color-cyan">CI/CD Gating</span>
+    </div>
+
+    <header class="subpage-header">
+      <span class="subpage-tag mono">AUTOMATED PIPELINE POLICIES</span>
+      <h1 class="subpage-title">Automated CI/CD Release Gating</h1>
+      <p class="subpage-lead">
+        Enforce strict PASS / REVIEW / BLOCK policies directly within GitHub Actions, GitLab CI, and Kubernetes deployment operators.
+      </p>
+    </header>
+
+    <div class="content-grid">
+      <div class="info-card">
+        <div class="card-icon"><i class="ri-git-pull-request-line"></i></div>
+        <h3 class="card-heading">PR Comment Bot &amp; Diff Previews</h3>
+        <p class="card-body-text">
+          Generates comprehensive markdown summaries directly in pull requests, comparing baseline metrics against candidate weights with interactive sparklines.
+        </p>
+      </div>
+
+      <div class="info-card">
+        <div class="card-icon"><i class="ri-forbid-line"></i></div>
+        <h3 class="card-heading">Non-Bypassable Release Locks</h3>
+        <p class="card-body-text">
+          Blocks Kubernetes container rollout if candidate model accuracy drops below baseline delta tolerances or fails adversarial stress tests.
+        </p>
+      </div>
+
+      <div class="info-card">
+        <div class="card-icon"><i class="ri-award-line"></i></div>
+        <h3 class="card-heading">Provenance &amp; Attestation</h3>
+        <p class="card-body-text">
+          Generates in-toto compliant attestation payloads cryptographically linking git commit SHAs to model verification certificates.
+        </p>
+      </div>
+    </div>
+
+    <div class="code-block-container mono">
+      <div class="code-block-header">
+        <span>.GITHUB/WORKFLOWS/MODELSHIELD_GATE.YML</span>
+        <span>YAML</span>
+      </div>
+      <pre class="code-content"><code><span class="keyword">name</span>: <span class="string">ModelShield CI/CD Release Gate</span>
+<span class="keyword">on</span>: [<span class="string">push</span>, <span class="string">pull_request</span>]
+
+<span class="keyword">jobs</span>:
+  <span class="keyword">evaluate</span>:
+    <span class="keyword">runs-on</span>: <span class="string">ubuntu-latest</span>
+    <span class="keyword">steps</span>:
+      - <span class="keyword">uses</span>: <span class="string">actions/checkout@v4</span>
+      - <span class="keyword">uses</span>: <span class="string">modelshield/verify-action@v1</span>
+        <span class="keyword">with</span>:
+          <span class="string">candidate-path</span>: <span class="string">"models/candidate_v3.pkl"</span>
+          <span class="string">baseline-path</span>: <span class="string">"models/baseline_v2.pkl"</span>
+          <span class="string">policy</span>: <span class="string">"strict-block"</span>
+          <span class="string">token</span>: <span class="string">${{ secrets.MODELSHIELD_TOKEN }}</span></code></pre>
+    </div>
+
+    <div class="action-box">
+      <div>
+        <h3 class="action-box-title">Configure CI/CD Webhooks</h3>
+        <p class="action-box-desc">Set up automated integration tokens and policies in the Workbench settings.</p>
+      </div>
+      <a href="../dashboard/index.html" class="nav-btn-primary">
+        <span>Go to Workspace</span>
+        <i class="ri-arrow-right-line"></i>
+      </a>
+    </div>
+  </main>
+
+  <footer class="landing-footer">
+    <div class="footer-container">
+      <div class="footer-top">
+        <div class="footer-brand-col">
+          <div class="brand">
+            <div class="brand-shield-icon"><i class="ri-shield-keyhole-line"></i></div>
+            <span class="brand-text">ModelShield</span>
+          </div>
+          <p class="footer-tagline" data-i18n="footer.tagline">Security &amp; ML Regression Protection Infrastructure for Artificial Intelligence Models.</p>
+          <div class="footer-status-pill mono">
+            <span class="status-dot"></span>
+            <span data-i18n="footer.status">SYSTEM OPERATIONAL // V1.0.0</span>
+          </div>
+          <div class="footer-social-links">
+            <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="social-icon-btn"><i class="ri-github-fill"></i></a>
+            <a href="https://x.com" target="_blank" rel="noopener noreferrer" class="social-icon-btn"><i class="ri-twitter-x-fill"></i></a>
+            <a href="https://discord.com" target="_blank" rel="noopener noreferrer" class="social-icon-btn"><i class="ri-discord-fill"></i></a>
+            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" class="social-icon-btn"><i class="ri-linkedin-box-fill"></i></a>
+            <a href="https://npmjs.com" target="_blank" rel="noopener noreferrer" class="social-icon-btn"><i class="ri-npmjs-fill"></i></a>
+          </div>
+        </div>
+
+        <div class="footer-nav-group">
+          <div class="footer-nav-col">
+            <h4 class="footer-nav-heading mono" data-i18n="footer.col_platform">PLATFORM</h4>
+            <a href="../dashboard/index.html" data-i18n="footer.link_workbench">Developer Workbench</a>
+            <a href="security-engine.html" data-i18n="footer.link_sec_engine">Security Engine</a>
+            <a href="verification-stack.html" data-i18n="footer.link_verif_stack">Verification Stack</a>
+            <a href="regression-bank.html" data-i18n="footer.link_regr_bank">Regression Bank</a>
+          </div>
+          <div class="footer-nav-col">
+            <h4 class="footer-nav-heading mono" data-i18n="footer.col_security">SECURITY</h4>
+            <a href="adversarial-testing.html" data-i18n="footer.link_adv_testing">Adversarial Testing</a>
+            <a href="reproducibility-capsules.html" data-i18n="footer.link_repro_capsules">Reproducibility Capsules</a>
+            <a href="cicd-gating.html" data-i18n="footer.link_cicd">CI/CD Gating</a>
+            <a href="privacy-audits.html" data-i18n="footer.link_privacy_audits">Privacy Audits</a>
+          </div>
+          <div class="footer-nav-col">
+            <h4 class="footer-nav-heading mono" data-i18n="footer.col_resources">RESOURCES</h4>
+            <a href="docs.html" data-i18n="footer.link_docs">Documentation</a>
+            <a href="api-reference.html" data-i18n="footer.link_api">API Reference</a>
+            <a href="release-notes.html" data-i18n="footer.link_releases">Release Notes</a>
+            <a href="status.html" data-i18n="footer.link_status">System Status</a>
+          </div>
+          <div class="footer-nav-col">
+            <h4 class="footer-nav-heading mono" data-i18n="footer.col_company">COMPANY</h4>
+            <a href="about.html" data-i18n="footer.link_about">About ModelShield</a>
+            <a href="terms.html" data-i18n="footer.link_terms">Terms of Service</a>
+            <a href="privacy.html" data-i18n="footer.link_privacy">Privacy Policy</a>
+            <a href="security-engine.html" data-i18n="footer.link_advisories">Security Advisories</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div class="footer-copy">
+          <span data-i18n="footer.copyright">&copy; 2026 ModelShield Engineering. All rights reserved.</span>
+        </div>
+        <div class="footer-lang-picker">
+          <i class="ri-global-line"></i>
+          <select class="lang-selector-select" aria-label="Language Selector">
+            <option value="en">English (US)</option>
+            <option value="es">Español</option>
+            <option value="fr">Français</option>
+            <option value="de">Deutsch</option>
+            <option value="ja">日本語</option>
+            <option value="zh">中文</option>
+          </select>
+        </div>
+        <div class="footer-tech-specs mono">
+          <span>PyTorch 2.2</span> • <span>CUDA 12.1</span> • <span>Schema v1.0</span>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../i18n.js"></script>
+</body>
+</html>

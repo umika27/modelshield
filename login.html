@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign In — ModelShield | ML Security &amp; Regression Defense</title>
+  <meta name="description" content="Sign in to your ModelShield engineering workspace to verify models, inspect layer activations, and gate releases." />
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet" />
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="login.css" />
+</head>
+<body>
+
+  <!-- Atmospheric Subtle Grid -->
+  <div class="auth-grid-backdrop"></div>
+
+  <!-- Main Viewport Layout -->
+  <main class="auth-viewport">
+
+    <!-- Left Quiet / Negative Space Visual Pane -->
+    <section class="auth-visual-pane">
+      
+      <!-- Top Left Brand -->
+      <a href="index.html" class="auth-brand-header" title="ModelShield Home">
+        <div class="brand-shield-icon">
+          <i class="ri-shield-keyhole-line"></i>
+        </div>
+        <span class="brand-text">ModelShield</span>
+      </a>
+
+      <!-- Quiet Minimal Orbital Constellation (6 Stage Layers) -->
+      <div class="auth-constellation-center" aria-hidden="true">
+        <div class="orbital-ring">
+          <div class="orbital-node node-1" title="01 // INGESTION"></div>
+          <div class="orbital-node node-2" title="02 // TOPOLOGY"></div>
+          <div class="orbital-node node-3" title="03 // SCAN"></div>
+          <div class="orbital-node node-4" title="04 // ATTACK"></div>
+          <div class="orbital-node node-5" title="05 // SHIELD"></div>
+          <div class="orbital-node node-6" title="06 // GATE"></div>
+        </div>
+      </div>
+
+      <!-- Bottom Visual Pane Telemetry -->
+      <div class="auth-visual-footer mono">
+        <div class="telemetry-item">
+          <span class="telemetry-dot"></span>
+          <span>SEC_PERIMETER // READY</span>
+        </div>
+        <div class="telemetry-item">
+          <span>DETERMINISM // 99.8%</span>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Center Subtle Hairline Divider -->
+    <div class="auth-divider" aria-hidden="true"></div>
+
+    <!-- Right Authentication Form Pane -->
+    <section class="auth-form-pane">
+
+      <!-- Top Right Overview Link -->
+      <div class="auth-top-nav-action">
+        <a href="index.html" class="btn-back-overview" title="Back to Overview">
+          <i class="ri-arrow-left-line"></i>
+          <span>Overview</span>
+        </a>
+      </div>
+
+      <!-- Compact Authentication Card -->
+      <div class="auth-form-card">
+        
+        <!-- Dot Constellation Emblem -->
+        <div class="auth-emblem-wrap" aria-hidden="true">
+          <div class="auth-emblem-dots">
+            <span class="emblem-dot"></span>
+            <span class="emblem-dot"></span>
+            <span class="emblem-dot"></span>
+            <span class="emblem-dot"></span>
+            <span class="emblem-dot"></span>
+            <span class="emblem-dot"></span>
+            <span class="emblem-dot"></span>
+            <span class="emblem-dot"></span>
+          </div>
+        </div>
+
+        <!-- Form Heading & Subtitle -->
+        <h1 class="auth-title">Sign in</h1>
+        <p class="auth-subtitle">Access your ModelShield workspace.</p>
+
+        <!-- Dynamic Status Message -->
+        <div class="auth-status-box" id="auth-status-msg" role="alert"></div>
+
+        <!-- Authentication Form -->
+        <form class="auth-form" id="auth-form" novalidate autocomplete="on">
+          
+          <div class="form-field">
+            <input 
+              type="text" 
+              id="auth-email" 
+              class="auth-input" 
+              placeholder="Email or username" 
+              autocomplete="username" 
+              spellcheck="false"
+              autofocus
+            />
+          </div>
+
+          <div class="form-field password-field">
+            <input 
+              type="password" 
+              id="auth-password" 
+              class="auth-input" 
+              placeholder="Password" 
+              autocomplete="current-password" 
+            />
+            <button type="button" class="btn-toggle-password" id="toggle-password-btn" aria-label="Toggle password visibility" title="Toggle visibility">
+              <i class="ri-eye-off-line" id="password-eye-icon"></i>
+            </button>
+          </div>
+
+          <!-- Inline Error Message Display -->
+          <div class="auth-error-text" id="auth-error-msg" role="alert"></div>
+
+          <button type="submit" class="auth-submit-btn" id="auth-submit-btn">
+            <span id="btn-submit-label">Enter</span>
+          </button>
+
+        </form>
+
+        <!-- Secondary Actions -->
+        <div class="auth-secondary-actions">
+          <a href="#" class="auth-sub-link" id="forgot-password-link">Forgot password?</a>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // Defined Demo Credentials (Frontend Prototype Only)
+      const DEMO_CREDENTIALS = {
+        email: "demo@modelshield.dev",
+        username: "demo",
+        password: "modelshield123"
+      };
+
+      const authForm = document.getElementById("auth-form");
+      const emailInput = document.getElementById("auth-email");
+      const passwordInput = document.getElementById("auth-password");
+      const togglePasswordBtn = document.getElementById("toggle-password-btn");
+      const eyeIcon = document.getElementById("password-eye-icon");
+      const submitBtn = document.getElementById("auth-submit-btn");
+      const submitLabel = document.getElementById("btn-submit-label");
+      const errorMsg = document.getElementById("auth-error-msg");
+      const statusBox = document.getElementById("auth-status-msg");
+      const forgotPasswordLink = document.getElementById("forgot-password-link");
+
+      // Clear inline error and input highlight when user types
+      const clearError = () => {
+        if (errorMsg) {
+          errorMsg.textContent = "";
+          errorMsg.classList.remove("visible");
+        }
+        if (emailInput) emailInput.classList.remove("input-error");
+        if (passwordInput) passwordInput.classList.remove("input-error");
+        if (statusBox) statusBox.style.display = "none";
+      };
+
+      if (emailInput) emailInput.addEventListener("input", clearError);
+      if (passwordInput) passwordInput.addEventListener("input", clearError);
+
+      // Cursor-Related Spotlight Hover & Click Morph
+      if (submitBtn) {
+        submitBtn.addEventListener("mousemove", (e) => {
+          const rect = submitBtn.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          submitBtn.style.setProperty("--btn-mouse-x", `${x.toFixed(1)}px`);
+          submitBtn.style.setProperty("--btn-mouse-y", `${y.toFixed(1)}px`);
+        });
+
+        submitBtn.addEventListener("mousedown", () => {
+          submitBtn.classList.add("btn-clicked");
+        });
+      }
+
+      // Toggle Password Visibility
+      if (togglePasswordBtn && passwordInput && eyeIcon) {
+        togglePasswordBtn.addEventListener("click", () => {
+          const isPassword = passwordInput.type === "password";
+          passwordInput.type = isPassword ? "text" : "password";
+          eyeIcon.className = isPassword ? "ri-eye-line" : "ri-eye-off-line";
+          togglePasswordBtn.setAttribute("aria-label", isPassword ? "Hide password" : "Show password");
+        });
+      }
+
+      // Forgot Password Notification
+      if (forgotPasswordLink && statusBox) {
+        forgotPasswordLink.addEventListener("click", (e) => {
+          e.preventDefault();
+          clearError();
+          statusBox.className = "auth-status-box status-info";
+          statusBox.textContent = "Password recovery link sent to registered email.";
+          statusBox.style.display = "block";
+        });
+      }
+
+      // Frontend Authentication Form Submission
+      if (authForm) {
+        authForm.addEventListener("submit", (e) => {
+          e.preventDefault();
+          clearError();
+
+          const email = emailInput ? emailInput.value.trim() : "";
+          const password = passwordInput ? passwordInput.value : "";
+
+          // 1. Validation: Empty Email / Username
+          if (!email) {
+            if (emailInput) emailInput.classList.add("input-error");
+            if (errorMsg) {
+              errorMsg.textContent = "Please enter your email or username.";
+              errorMsg.classList.add("visible");
+            }
+            if (emailInput) emailInput.focus();
+            return;
+          }
+
+          // 2. Validation: Empty Password
+          if (!password) {
+            if (passwordInput) passwordInput.classList.add("input-error");
+            if (errorMsg) {
+              errorMsg.textContent = "Please enter your password.";
+              errorMsg.classList.add("visible");
+            }
+            if (passwordInput) passwordInput.focus();
+            return;
+          }
+
+          // 3. Credential Verification (Frontend Demo)
+          const isValidIdentifier = 
+            email.toLowerCase() === DEMO_CREDENTIALS.email.toLowerCase() ||
+            email.toLowerCase() === DEMO_CREDENTIALS.username.toLowerCase();
+          
+          const isCorrectPassword = password === DEMO_CREDENTIALS.password;
+
+          if (isValidIdentifier && isCorrectPassword) {
+            // SUCCESS: Show subtle loading state & smoothly navigate to workspace
+            submitBtn.disabled = true;
+            submitLabel.textContent = "Signing in...";
+
+            try {
+              localStorage.setItem("modelshield_auth", "true");
+              localStorage.setItem("modelshield_user", email);
+              sessionStorage.setItem("modelshield_authenticated", "true");
+            } catch (err) {}
+
+            // Smooth transition to existing workspace route
+            setTimeout(() => {
+              window.location.href = "dashboard/index.html";
+            }, 450);
+
+          } else {
+            // ERROR: Show inline error & subtle input error border without navigating
+            if (emailInput) emailInput.classList.add("input-error");
+            if (passwordInput) passwordInput.classList.add("input-error");
+            
+            if (errorMsg) {
+              errorMsg.textContent = "Invalid email or password.";
+              errorMsg.classList.add("visible");
+            }
+            
+            submitBtn.classList.remove("btn-clicked");
+            if (passwordInput) passwordInput.focus();
+          }
+        });
+      }
+    });
+  </script>
+
+</body>
+</html>

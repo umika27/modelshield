@@ -91,17 +91,6 @@ const STAGE_CONFIGS = [
       bl: { label: "DETERMINISM", title: "100% REPRODUCIBILITY" },
       br: { label: "STATUS", title: "RELEASE APPROVED" }
     }
-  },
-  {
-    index: 6,
-    name: "STAGE 06 // DEPLOY",
-    title: "Install & Run.",
-    popups: {
-      tl: { label: "DEPLOYMENT", title: "PRODUCTION READY" },
-      tr: { label: "GATE_STATUS", title: "PASS (EXIT CODE 0)" },
-      bl: { label: "INSTALLATION", title: "PIP REGISTERED" },
-      br: { label: "ACTION", title: "WORKBENCH UNLOCKED" }
-    }
   }
 ];
 
@@ -120,6 +109,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initWorkspaceNavigationGuards();
   initPhasedHeroSequence();
   initPipCopyHandler();
+  initPlatformSlider();
 });
 
 function initPipCopyHandler() {
@@ -575,8 +565,8 @@ function animateScene() {
 function updateScrollStageDynamics(p, time) {
   if (!modelArtifactGroup) return;
 
-  // --- STAGE 0: HERO (0.0 - 0.12) ---
-  if (p < 0.12) {
+  // --- STAGE 0: HERO (0.0 - 0.16) ---
+  if (p < 0.16) {
     targetCamX = 0.0;
     targetCamY = 0.0;
     targetCamZ = 14.0;
@@ -590,9 +580,9 @@ function updateScrollStageDynamics(p, time) {
 
     setLayerEmissive(0x38bdf8, 0.15);
   }
-  // --- STAGE 1: DETECT (0.12 - 0.28) ---
-  else if (p < 0.28) {
-    const t = (p - 0.12) / 0.16;
+  // --- STAGE 1: DETECT (0.16 - 0.35) ---
+  else if (p < 0.35) {
+    const t = (p - 0.16) / 0.19;
     targetCamX = 2.0 - t * 1.5;
     targetCamY = 0.2;
     targetCamZ = 14.0 - t * 1.5;
@@ -606,9 +596,9 @@ function updateScrollStageDynamics(p, time) {
 
     setLayerEmissive(0x38bdf8, 0.8);
   }
-  // --- STAGE 2: BUILD / ASSEMBLE (0.28 - 0.45) ---
-  else if (p < 0.45) {
-    const t = (p - 0.28) / 0.17;
+  // --- STAGE 2: BUILD / ASSEMBLE (0.35 - 0.55) ---
+  else if (p < 0.55) {
+    const t = (p - 0.35) / 0.20;
     targetCamX = 0.5 + Math.sin(t * Math.PI) * 1.2;
     targetCamY = 0.4 + t * 0.4;
     targetCamZ = 12.5 - t * 1.0;
@@ -627,9 +617,9 @@ function updateScrollStageDynamics(p, time) {
 
     setLayerEmissive(0x38bdf8, 1.0);
   }
-  // --- STAGE 3: TEST / SCAN (0.45 - 0.62) ---
-  else if (p < 0.62) {
-    const t = (p - 0.45) / 0.17;
+  // --- STAGE 3: TEST / SCAN (0.55 - 0.72) ---
+  else if (p < 0.72) {
+    const t = (p - 0.55) / 0.17;
     targetCamX = 0.0;
     targetCamY = 0.3;
     targetCamZ = 11.2;
@@ -646,9 +636,9 @@ function updateScrollStageDynamics(p, time) {
 
     setLayerEmissive(0x38bdf8, 1.2);
   }
-  // --- STAGE 4: ATTACK / PERTURBATION (0.62 - 0.78) ---
-  else if (p < 0.78) {
-    const t = (p - 0.62) / 0.16;
+  // --- STAGE 4: ATTACK / PERTURBATION (0.72 - 0.88) ---
+  else if (p < 0.88) {
+    const t = (p - 0.72) / 0.16;
     targetCamX = (Math.sin(time * 12) * 0.08) - 0.4;
     targetCamY = (Math.cos(time * 10) * 0.08);
     targetCamZ = 11.8;
@@ -679,9 +669,9 @@ function updateScrollStageDynamics(p, time) {
 
     setLayerEmissive(0xf59e0b, 1.0); // Amber warning
   }
-  // --- STAGE 5: SHIELD / VERIFICATION (0.78 - 0.92) ---
-  else if (p < 0.92) {
-    const t = (p - 0.78) / 0.14;
+  // --- STAGE 5: SHIELD / VERIFICATION (0.88 - 1.0) ---
+  else {
+    const t = (p - 0.88) / 0.12;
     targetCamX = 0.0;
     targetCamY = 0.2;
     targetCamZ = 13.5;
@@ -706,22 +696,6 @@ function updateScrollStageDynamics(p, time) {
     });
 
     setLayerEmissive(0x10b981, 1.0); // Emerald verified
-  }
-  // --- STAGE 6: CLI & DEPLOY MORPH (0.92 - 1.0) ---
-  else {
-    const t = (p - 0.92) / 0.08;
-    targetCamX = 0.0;
-    targetCamY = 0.0;
-    targetCamZ = 16.0 + t * 4.0;
-    targetCamLook = { x: 0, y: 0, z: 0 };
-
-    // Collapse neural layers inward as it transforms into CLI
-    modelArtifactGroup.scale.setScalar((1.0 - t * 0.6));
-    boundingCube.material.opacity = (1 - t) * 0.4;
-    shieldMesh.material.opacity = (1 - t) * 0.6;
-    attackParticles.material.opacity = 0.0;
-
-    setLayerEmissive(0x10b981, 0.8);
   }
 }
 
@@ -748,9 +722,20 @@ function initScrollStoryController() {
   const heroBottom = document.getElementById("hero-bottom-group");
   const hudStage = document.getElementById("spatial-hud-stage");
   const cliStage = document.getElementById("spatial-cli-stage");
-  const progressBar = document.getElementById("story-progress-bar");
+  const landingNav = document.querySelector(".landing-nav");
 
   window.addEventListener("scroll", () => {
+    // Hide header on scroll down, show at top of page
+    if (landingNav) {
+      if (window.scrollY > 40) {
+        landingNav.classList.add("is-hidden");
+        landingNav.classList.add("is-scrolled");
+      } else {
+        landingNav.classList.remove("is-hidden");
+        landingNav.classList.remove("is-scrolled");
+      }
+    }
+
     const rect = scrollTrack.getBoundingClientRect();
     const totalDist = scrollTrack.offsetHeight - window.innerHeight;
     const currentDist = -rect.top;
@@ -759,50 +744,28 @@ function initScrollStoryController() {
       scrollProgress = Math.max(0, Math.min(1, currentDist / totalDist));
     }
 
-    if (progressBar) {
-      progressBar.style.width = `${scrollProgress * 100}%`;
-    }
-
-    // Determine current stage index (0 to 6)
+    // Determine current stage index (0 to 5)
     let stageIdx = 0;
-    if (scrollProgress < 0.12) stageIdx = 0;
-    else if (scrollProgress < 0.28) stageIdx = 1;
-    else if (scrollProgress < 0.45) stageIdx = 2;
-    else if (scrollProgress < 0.62) stageIdx = 3;
-    else if (scrollProgress < 0.78) stageIdx = 4;
-    else if (scrollProgress < 0.92) stageIdx = 5;
-    else stageIdx = 6;
+    if (scrollProgress < 0.16) stageIdx = 0;
+    else if (scrollProgress < 0.35) stageIdx = 1;
+    else if (scrollProgress < 0.55) stageIdx = 2;
+    else if (scrollProgress < 0.72) stageIdx = 3;
+    else if (scrollProgress < 0.88) stageIdx = 4;
+    else stageIdx = 5;
 
     if (stageIdx !== currentStage) {
       currentStage = stageIdx;
       updateStageDOM(currentStage);
     }
 
-    // 3D Canvas Visibility Lifecycle: Fade out 3D model artifact cleanly in Stage 06 // DEPLOY
-    const webglCanvas = document.getElementById("webgl-canvas");
-    if (webglCanvas) {
-      if (scrollProgress >= 0.88) {
-        const fadeP = Math.min(1, (scrollProgress - 0.88) / 0.08);
-        const canvasOpacity = Math.max(0, 1 - fadeP * 1.5);
-        webglCanvas.style.opacity = canvasOpacity.toFixed(2);
-        if (modelArtifactGroup) {
-          modelArtifactGroup.visible = canvasOpacity > 0.05;
-        }
-      } else {
-        webglCanvas.style.opacity = "1";
-        if (modelArtifactGroup) {
-          modelArtifactGroup.visible = true;
-        }
-      }
-    }
-
     // Dynamic Spatial Composition Lifecycle
     if (spatialComp) {
-      const floatingCallouts = document.querySelectorAll(".floating-callout, .spatial-leader-svg, .top-right-landing-gif-container");
+      const floatingCallouts = document.querySelectorAll(".floating-callout, .spatial-leader-svg");
+      const gifBadge = document.getElementById("landing-gif-container");
 
-      if (scrollProgress < 0.12) {
+      if (scrollProgress < 0.16) {
         // --- STAGE 00 // HERO: Floating 3D Spatial Callouts Active ---
-        const p0 = scrollProgress / 0.12;
+        const p0 = scrollProgress / 0.16;
         const heroOpacity = Math.max(0, 1 - p0 * 1.4);
 
         spatialComp.style.setProperty("--scene-scale", (1.0 - p0 * 0.08).toFixed(3));
@@ -817,24 +780,28 @@ function initScrollStoryController() {
           el.style.opacity = heroOpacity;
           el.style.pointerEvents = heroOpacity > 0.5 ? "auto" : "none";
         });
+        if (gifBadge) {
+          gifBadge.style.opacity = heroOpacity;
+          gifBadge.style.pointerEvents = heroOpacity > 0.5 ? "auto" : "none";
+        }
 
         if (hudStage) {
           hudStage.style.opacity = 0;
           hudStage.style.transform = "translate(-50%, 25px)";
           hudStage.style.pointerEvents = "none";
         }
-        if (cliStage) {
-          cliStage.style.opacity = 0;
-          cliStage.style.pointerEvents = "none";
-        }
 
-      } else if (scrollProgress < 0.90) {
+      } else {
         // --- STAGES 01 - 05 // VERIFICATION JOURNEY ---
         if (heroTop) heroTop.style.opacity = 0;
         floatingCallouts.forEach(el => {
           el.style.opacity = 1;
           el.style.pointerEvents = "auto";
         });
+        if (gifBadge) {
+          gifBadge.style.opacity = "0";
+          gifBadge.style.pointerEvents = "none";
+        }
 
         let scale = 1.05;
         let transX = 0;
@@ -861,34 +828,6 @@ function initScrollStoryController() {
           hudStage.style.transform = "translate(-50%, 0px)";
           hudStage.style.pointerEvents = "auto";
         }
-        if (cliStage) {
-          cliStage.style.opacity = 0;
-          cliStage.style.pointerEvents = "none";
-        }
-
-      } else {
-        // --- STAGE 06 // DEPLOY CLI MORPH ---
-        const pCli = (scrollProgress - 0.90) / 0.10;
-        if (heroTop) heroTop.style.opacity = 0;
-        floatingCallouts.forEach(el => {
-          el.style.opacity = 0;
-          el.style.pointerEvents = "none";
-        });
-        if (hudStage) {
-          hudStage.style.opacity = 0;
-          hudStage.style.transform = "translate(-50%, 25px)";
-          hudStage.style.pointerEvents = "none";
-        }
-
-        spatialComp.style.setProperty("--scene-scale", (1.0 - pCli * 0.05).toFixed(3));
-        spatialComp.style.setProperty("--scene-translate-x", "0px");
-        spatialComp.style.setProperty("--scene-translate-y", "0px");
-
-        if (cliStage) {
-          const cliOpacity = Math.min(1, pCli * 1.8);
-          cliStage.style.opacity = cliOpacity;
-          cliStage.style.pointerEvents = cliOpacity > 0.5 ? "auto" : "none";
-        }
       }
     }
 
@@ -910,15 +849,18 @@ function updateStageDOM(stageIdx) {
     hudStage.style.opacity = "0.3";
   }
 
+  const stageName = (window.ModelShieldI18n && window.ModelShieldI18n.t(`stage${stageIdx}.name`)) || config.name;
+  const stageTitle = (window.ModelShieldI18n && window.ModelShieldI18n.t(`stage${stageIdx}.title`)) || config.title;
+
   setTimeout(() => {
     if (idxEl) {
-      idxEl.innerText = config.name;
+      idxEl.innerText = stageName;
       idxEl.classList.remove("slide-up-active");
       void idxEl.offsetWidth;
       idxEl.classList.add("slide-up-active");
     }
     if (titleEl) {
-      titleEl.innerText = config.title;
+      titleEl.innerText = stageTitle;
       titleEl.classList.remove("slide-up-active");
       void titleEl.offsetWidth;
       titleEl.classList.add("slide-up-active");
@@ -951,6 +893,10 @@ function updateStageDOM(stageIdx) {
     }
   }, 50);
 }
+
+window.addEventListener("modelshield_lang_change", () => {
+  updateStageDOM(currentStage);
+});
 
 function updateScrubberUI(activeIdx) {
   const scrubberItems = document.querySelectorAll(".scrubber-item");
@@ -1189,3 +1135,111 @@ function initPolicySimulator() {
 
   recalculatePolicy();
 }
+
+// ============================================================================
+// 8. HORIZONTAL PLATFORM ARCHITECTURE SLIDER (APPLE EVENTS STYLE)
+// ============================================================================
+
+function initPlatformSlider() {
+  const track = document.getElementById("platform-slider-track");
+  const prevBtn = document.getElementById("slider-prev-btn");
+  const nextBtn = document.getElementById("slider-next-btn");
+  const thumb = document.getElementById("slider-progress-thumb");
+
+  if (!track) return;
+
+  const updateControls = () => {
+    const maxScroll = track.scrollWidth - track.clientWidth;
+    if (maxScroll <= 0) {
+      if (prevBtn) prevBtn.classList.add("disabled");
+      if (nextBtn) nextBtn.classList.add("disabled");
+      if (thumb) thumb.style.transform = "translateX(0%)";
+      return;
+    }
+
+    const current = track.scrollLeft;
+    const progress = Math.max(0, Math.min(1, current / maxScroll));
+
+    if (prevBtn) prevBtn.classList.toggle("disabled", current <= 8);
+    if (nextBtn) nextBtn.classList.toggle("disabled", current >= maxScroll - 8);
+
+    if (thumb) {
+      const travel = (180 - (180 * 0.3)); // Track width (180px) minus thumb width (30%)
+      thumb.style.transform = `translateX(${progress * travel}px)`;
+    }
+  };
+
+  const getCardStep = () => {
+    const firstCard = track.querySelector(".platform-slider-card");
+    if (!firstCard) return 380;
+    return firstCard.offsetWidth + 24; // Card width + gap
+  };
+
+  if (prevBtn) {
+    prevBtn.addEventListener("click", () => {
+      const step = getCardStep();
+      track.scrollBy({ left: -step, behavior: "smooth" });
+    });
+  }
+
+  if (nextBtn) {
+    nextBtn.addEventListener("click", () => {
+      const step = getCardStep();
+      track.scrollBy({ left: step, behavior: "smooth" });
+    });
+  }
+
+  // Mouse Drag-to-Scroll Support
+  let isDown = false;
+  let startX = 0;
+  let scrollLeftPos = 0;
+  let hasDragged = false;
+
+  track.addEventListener("mousedown", (e) => {
+    isDown = true;
+    hasDragged = false;
+    track.classList.add("is-dragging");
+    startX = e.pageX - track.offsetLeft;
+    scrollLeftPos = track.scrollLeft;
+  });
+
+  window.addEventListener("mouseup", () => {
+    if (!isDown) return;
+    isDown = false;
+    track.classList.remove("is-dragging");
+  });
+
+  track.addEventListener("mouseleave", () => {
+    if (!isDown) return;
+    isDown = false;
+    track.classList.remove("is-dragging");
+  });
+
+  track.addEventListener("mousemove", (e) => {
+    if (!isDown) return;
+    e.preventDefault();
+    const x = e.pageX - track.offsetLeft;
+    const walk = (x - startX) * 1.4;
+    if (Math.abs(walk) > 5) {
+      hasDragged = true;
+    }
+    track.scrollLeft = scrollLeftPos - walk;
+  });
+
+  // Prevent unwanted click navigation if the user was dragging
+  track.querySelectorAll(".platform-slider-card").forEach(card => {
+    card.addEventListener("click", (e) => {
+      if (hasDragged) {
+        e.preventDefault();
+        hasDragged = false;
+      }
+    });
+  });
+
+  track.addEventListener("scroll", updateControls, { passive: true });
+  window.addEventListener("resize", updateControls, { passive: true });
+
+  // Initial state check
+  setTimeout(updateControls, 100);
+}
+

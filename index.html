@@ -17,6 +17,9 @@
   <!-- Three.js Library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
+  <!-- Internationalization Engine -->
+  <script src="i18n.js"></script>
+
   <link rel="stylesheet" href="landing.css">
 </head>
 <body data-theme="dark">
@@ -39,17 +42,6 @@
         <span class="brand-text">ModelShield</span>
       </a>
 
-      <!-- Center Links -->
-      <nav class="nav-links" aria-label="Main Navigation">
-        <a href="#hero-section" class="nav-link">Product</a>
-        <a href="#storyline" class="nav-link">Security Engine</a>
-        <a href="#platform-stack" class="nav-link">Documentation</a>
-        <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="nav-link nav-github">
-          <i class="ri-github-line"></i>
-          <span>GitHub</span>
-        </a>
-      </nav>
-
       <!-- Right Actions & Theme Toggle -->
       <div class="nav-actions">
         <!-- Light / Dark Mode Segmented Toggle -->
@@ -62,22 +54,14 @@
           </button>
         </div>
 
-        <a href="dashboard/index.html" class="nav-btn-text">Sign In</a>
+        <a href="login.html" class="nav-btn-text" data-i18n="nav.signin">Sign In</a>
         <a href="dashboard/index.html" class="nav-btn-primary" id="btn-go-workspace">
-          <span>Go to Workspace</span>
+          <span data-i18n="nav.workspace">Go to Workspace</span>
           <i class="ri-arrow-right-line"></i>
         </a>
       </div>
     </div>
   </header>
-
-  <!-- Floating Top-Right Landing GIF Badge with Hover Shortcut Key Description -->
-  <div class="top-right-landing-gif-container" id="landing-gif-container" title="ModelShield Landing Agent">
-    <div class="gif-hover-speech-bubble mono" id="gif-speech-bubble">
-      <span class="bubble-text" id="bubble-text"><span class="bubble-key-badge">Ctrl + Shift + P</span> Trigger Command Palette</span>
-    </div>
-    <img src="agents/gif/landing.gif" alt="Landing Agent GIF" class="top-right-landing-gif" onerror="if(!this.src.includes('agents_gif')) this.src='agents_gif/landing.gif';" />
-  </div>
 
   <!-- 2. Continuous Scroll-Driven Story Container -->
   <div class="story-container" id="storyline">
@@ -93,8 +77,8 @@
           
           <!-- Minimal Hero Header -->
           <div class="spatial-layer spatial-hero-top" id="hero-top-group">
-            <div class="hero-eyebrow mono">MODEL VERIFICATION</div>
-            <h1 class="hero-headline">Verify Your ML Models.</h1>
+            <div class="hero-eyebrow mono" data-i18n="hero.eyebrow">MODEL VERIFICATION</div>
+            <h1 class="hero-headline" data-i18n="hero.headline">Verify Your ML Models.</h1>
           </div>
 
           <!-- Central 3D Model Viewport Area with Floating Spatial Callouts -->
@@ -155,57 +139,6 @@
             <h2 class="hud-stage-title" id="hud-stage-title">Model Weight Ingestion.</h2>
           </div>
 
-          <!-- Spatial Element 5: Stage 06 Minimal Pip Install Terminal -->
-          <div class="spatial-layer spatial-cli-stage" id="spatial-cli-stage">
-            <div class="cli-morph-header">
-              <div class="hud-stage-index mono">STAGE 06 // DEPLOY</div>
-              <h2 class="cli-morph-title">Install &amp; Run.</h2>
-            </div>
-
-            <div class="expanded-cli-terminal mono" id="morph-terminal">
-              <div class="expanded-cli-top">
-                <div class="terminal-dots">
-                  <span class="dot dot-red"></span>
-                  <span class="dot dot-yellow"></span>
-                  <span class="dot dot-green"></span>
-                </div>
-                <div class="expanded-cli-title">terminal — modelshield</div>
-              </div>
-
-              <div class="expanded-cli-content" id="morph-cli-stream">
-                <div class="cli-line cmd interactive-copy-line" data-copy="pip install modelshield" title="Click to copy command">
-                  <div class="line-left">
-                    <span class="prm">$</span>
-                    <span class="cmd-text">pip install modelshield</span>
-                  </div>
-                  <div class="line-right">
-                    <i class="ri-file-copy-line line-copy-icon"></i>
-                    <span class="line-copy-tooltip">Copy</span>
-                  </div>
-                </div>
-                <div class="cli-line info">&gt; Successfully installed modelshield-1.0.0</div>
-                <div class="cli-line cmd interactive-copy-line" data-copy="modelshield scan resnet50-v3.pkl" title="Click to copy command">
-                  <div class="line-left">
-                    <span class="prm">$</span>
-                    <span class="cmd-text">modelshield scan resnet50-v3.pkl</span>
-                  </div>
-                  <div class="line-right">
-                    <i class="ri-file-copy-line line-copy-icon"></i>
-                    <span class="line-copy-tooltip">Copy</span>
-                  </div>
-                </div>
-                <div class="cli-line deploy-ready color-emerald">&gt;&gt; VERIFIED — RELEASE APPROVED</div>
-              </div>
-
-              <div class="expanded-cli-actions">
-                <a href="dashboard/index.html" class="btn-morph-primary" id="btn-go-workspace-morph">
-                  <span>Go to Workspace</span>
-                  <i class="ri-arrow-right-line"></i>
-                </a>
-              </div>
-            </div>
-          </div>
-
         </div>
 
       </div>
@@ -236,16 +169,7 @@
           <span class="scrubber-txt mono">05 // SHIELD</span>
           <span class="scrubber-bar"></span>
         </button>
-        <button type="button" class="scrubber-item" data-stage="6" title="Stage 6: CLI &amp; Deploy">
-          <span class="scrubber-txt mono">06 // DEPLOY</span>
-          <span class="scrubber-bar"></span>
-        </button>
       </nav>
-
-      <!-- Scroll Progress Bar at Top of Stage -->
-      <div class="scroll-progress-line">
-        <div class="scroll-progress-fill" id="story-progress-bar"></div>
-      </div>
 
       <!-- Subtle Scroll Down Indicator -->
       <div class="scroll-indicator" id="scroll-indicator">
@@ -268,123 +192,220 @@
 
   </div>
 
-  <!-- 3. Deep Platform Architecture Section (Seamless Transition) -->
+  <!-- 3. Deep Platform Architecture Section (Horizontal Slider Carousel) -->
   <section class="platform-section" id="platform-stack">
     <div class="platform-container">
       
-      <!-- Section Header -->
-      <div class="platform-header">
-        <div class="eyebrow-badge">
-          <span class="eyebrow-text mono">AI INFRASTRUCTURE SPECIFICATION</span>
+      <!-- Section Header with Header Actions & Controls -->
+      <div class="platform-header-row">
+        <div class="platform-header-left">
+          <div class="eyebrow-badge">
+            <span class="eyebrow-text mono" data-i18n="arch.eyebrow">AI INFRASTRUCTURE SPECIFICATION</span>
+          </div>
+          <h2 class="platform-title" data-i18n="arch.title">The Complete Model Verification Stack</h2>
+          <p class="platform-sub" data-i18n="arch.desc">
+            ModelShield integrates natively into your training loops and CI/CD pipelines, automatically intercepting regression anomalies and adversarial vulnerabilities before deployment.
+          </p>
         </div>
-        <h2 class="platform-title">The Complete Model Verification Stack</h2>
-        <p class="platform-sub">
-          ModelShield integrates natively into your training loops and CI/CD pipelines, automatically intercepting regression anomalies and adversarial vulnerabilities before deployment.
+
+        <!-- Slider Arrow Navigation Controls -->
+        <div class="platform-slider-controls">
+          <a href="pages/verification-stack.html" class="btn-slider-view-all" data-i18n="arch.view_all">
+            View all capabilities
+          </a>
+          <div class="slider-arrow-group">
+            <button type="button" class="slider-arrow-btn" id="slider-prev-btn" aria-label="Previous Slide" title="Previous Slide">
+              <i class="ri-arrow-left-s-line"></i>
+            </button>
+            <button type="button" class="slider-arrow-btn" id="slider-next-btn" aria-label="Next Slide" title="Next Slide">
+              <i class="ri-arrow-right-s-line"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Horizontal Card Slider Track -->
+      <div class="platform-slider-wrapper" id="platform-slider-wrapper">
+        <div class="platform-slider-track" id="platform-slider-track">
+          
+          <!-- Card 1 -->
+          <a href="pages/adversarial-testing.html" class="platform-slider-card">
+            <div class="card-badge-pill mono">
+              <span class="badge-dot dot-cyan"></span>
+              <span>ATTACK_TOLERANCE: 0.04</span>
+            </div>
+            <div class="card-icon-wrap">
+              <i class="ri-shield-keyhole-line"></i>
+            </div>
+            <h3 class="card-title" data-i18n="card1.title">Adversarial Boundary Testing</h3>
+            <p class="card-desc" data-i18n="card1.desc">
+              Evaluates model resilience under gradient perturbation attacks (FGSM, PGD, HopSkipJump) and real-world sensor corruptions.
+            </p>
+            <div class="card-bottom-meta mono">
+              <span class="meta-tag">Gradient Perturbations</span>
+              <span class="meta-arrow"><i class="ri-arrow-right-line"></i></span>
+            </div>
+          </a>
+
+          <!-- Card 2 -->
+          <a href="pages/regression-bank.html" class="platform-slider-card">
+            <div class="card-badge-pill mono">
+              <span class="badge-dot dot-purple"></span>
+              <span>CAPSULE_SIG: SHA256-42f</span>
+            </div>
+            <div class="card-icon-wrap">
+              <i class="ri-git-branch-line"></i>
+            </div>
+            <h3 class="card-title" data-i18n="card2.title">Deterministic Failure Memory</h3>
+            <p class="card-desc" data-i18n="card2.desc">
+              Discovered edge-case failures are instantly crystallized into permanent regression test suites with frozen seeds and environment manifests.
+            </p>
+            <div class="card-bottom-meta mono">
+              <span class="meta-tag">Immutable Manifests</span>
+              <span class="meta-arrow"><i class="ri-arrow-right-line"></i></span>
+            </div>
+          </a>
+
+          <!-- Card 3 -->
+          <a href="pages/cicd-gating.html" class="platform-slider-card">
+            <div class="card-badge-pill mono">
+              <span class="badge-dot dot-emerald"></span>
+              <span>GATE: STRICT_BLOCK</span>
+            </div>
+            <div class="card-icon-wrap">
+              <i class="ri-git-merge-line"></i>
+            </div>
+            <h3 class="card-title" data-i18n="card3.title">Automated CI/CD Gating</h3>
+            <p class="card-desc" data-i18n="card3.desc">
+              Strict PASS / REVIEW / BLOCK policies. Triggers GitHub Actions workflow failure when candidate accuracy drops below baseline tolerances.
+            </p>
+            <div class="card-bottom-meta mono">
+              <span class="meta-tag">GitHub Actions / K8s</span>
+              <span class="meta-arrow"><i class="ri-arrow-right-line"></i></span>
+            </div>
+          </a>
+
+          <!-- Card 4 -->
+          <a href="pages/reproducibility-capsules.html" class="platform-slider-card">
+            <div class="card-badge-pill mono">
+              <span class="badge-dot dot-blue"></span>
+              <span>DETERMINISM: 99.8%</span>
+            </div>
+            <div class="card-icon-wrap">
+              <i class="ri-repeat-line"></i>
+            </div>
+            <h3 class="card-title" data-i18n="card4.title">Reproducibility Verification</h3>
+            <p class="card-desc" data-i18n="card4.desc">
+              Cross-verifies model determinism across CUDA architectures, multi-GPU batching, PyTorch versions, and floating-point precision modes.
+            </p>
+            <div class="card-bottom-meta mono">
+              <span class="meta-tag">Deterministic Seeds</span>
+              <span class="meta-arrow"><i class="ri-arrow-right-line"></i></span>
+            </div>
+          </a>
+
+          <!-- Card 5 -->
+          <a href="pages/privacy-audits.html" class="platform-slider-card">
+            <div class="card-badge-pill mono">
+              <span class="badge-dot dot-amber"></span>
+              <span>LEAK_RISK: ZERO</span>
+            </div>
+            <div class="card-icon-wrap">
+              <i class="ri-fingerprint-line"></i>
+            </div>
+            <h3 class="card-title" data-i18n="card5.title">Privacy &amp; Membership Defense</h3>
+            <p class="card-desc" data-i18n="card5.desc">
+              Audits embedding leakage and membership inference vulnerability vectors to prevent training data reconstruction.
+            </p>
+            <div class="card-bottom-meta mono">
+              <span class="meta-tag">Membership Inversion</span>
+              <span class="meta-arrow"><i class="ri-arrow-right-line"></i></span>
+            </div>
+          </a>
+
+          <!-- Card 6 -->
+          <a href="dashboard/index.html" class="platform-slider-card">
+            <div class="card-badge-pill mono">
+              <span class="badge-dot dot-cyan"></span>
+              <span>WORKBENCH: LIVE</span>
+            </div>
+            <div class="card-icon-wrap">
+              <i class="ri-dashboard-line"></i>
+            </div>
+            <h3 class="card-title" data-i18n="card6.title">Developer Inspection Workbench</h3>
+            <p class="card-desc" data-i18n="card6.desc">
+              Comprehensive web-based workspace to visually inspect layer activations, compare baseline vs candidate outputs, and approve release gates.
+            </p>
+            <div class="card-bottom-meta mono">
+              <span class="meta-tag">Interactive Workspace</span>
+              <span class="meta-arrow"><i class="ri-arrow-right-line"></i></span>
+            </div>
+          </a>
+
+        </div>
+      </div>
+
+      <!-- Slider Progress Indicator Bar -->
+      <div class="slider-progress-bar-wrap">
+        <div class="slider-progress-track">
+          <div class="slider-progress-thumb" id="slider-progress-thumb"></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 4. Minimalist Install & Run Section (OpenAI/ChatGPT Style Presentation) -->
+  <section class="install-run-section" id="install-run-section">
+    <div class="install-run-container">
+      
+      <!-- Minimalist Centered Heading & Subtitle -->
+      <div class="install-run-header">
+        <h2 class="install-run-title" data-i18n="stage6.title">Install &amp; Run.</h2>
+        <p class="install-run-subtitle">
+          Verify candidate models in your local environment or CI/CD pipelines with one command.
         </p>
       </div>
 
-      <!-- Feature Matrix Cards -->
-      <div class="platform-grid">
-        
-        <!-- Card 1 -->
-        <div class="platform-card">
-          <div class="card-icon-wrap">
-            <i class="ri-shield-keyhole-line"></i>
+      <!-- The Window Card -->
+      <div class="expanded-cli-terminal mono" id="morph-terminal">
+        <div class="expanded-cli-top">
+          <div class="terminal-dots">
+            <span class="dot dot-red"></span>
+            <span class="dot dot-yellow"></span>
+            <span class="dot dot-green"></span>
           </div>
-          <h3 class="card-title">Adversarial Boundary Testing</h3>
-          <p class="card-desc">
-            Evaluates model resilience under gradient perturbation attacks (FGSM, PGD, HopSkipJump) and real-world sensor corruptions.
-          </p>
-          <div class="card-footer mono">
-            <span class="pill-tag">ATTACK_TOLERANCE: 0.04</span>
-          </div>
+          <div class="expanded-cli-title">terminal — modelshield</div>
         </div>
 
-        <!-- Card 2 -->
-        <div class="platform-card">
-          <div class="card-icon-wrap">
-            <i class="ri-git-branch-line"></i>
+        <div class="expanded-cli-content" id="morph-cli-stream">
+          <div class="cli-line cmd interactive-copy-line" data-copy="pip install modelshield" title="Click to copy command">
+            <div class="line-left">
+              <span class="prm">$</span>
+              <span class="cmd-text">pip install modelshield</span>
+            </div>
+            <div class="line-right">
+              <i class="ri-file-copy-line line-copy-icon"></i>
+              <span class="line-copy-tooltip">Copy</span>
+            </div>
           </div>
-          <h3 class="card-title">Deterministic Failure Memory</h3>
-          <p class="card-desc">
-            Discovered edge-case failures are instantly crystallized into permanent regression test suites with frozen seeds and environment manifests.
-          </p>
-          <div class="card-footer mono">
-            <span class="pill-tag">CAPSULE_SIG: SHA256-42f</span>
+          <div class="cli-line info">&gt; Successfully installed modelshield-1.0.0</div>
+          <div class="cli-line cmd interactive-copy-line" data-copy="modelshield scan resnet50-v3.pkl" title="Click to copy command">
+            <div class="line-left">
+              <span class="prm">$</span>
+              <span class="cmd-text">modelshield scan resnet50-v3.pkl</span>
+            </div>
+            <div class="line-right">
+              <i class="ri-file-copy-line line-copy-icon"></i>
+              <span class="line-copy-tooltip">Copy</span>
+            </div>
           </div>
+          <div class="cli-line deploy-ready color-emerald">&gt;&gt; VERIFIED — RELEASE APPROVED</div>
         </div>
 
-        <!-- Card 3 -->
-        <div class="platform-card">
-          <div class="card-icon-wrap">
-            <i class="ri-git-merge-line"></i>
-          </div>
-          <h3 class="card-title">Automated CI/CD Gating</h3>
-          <p class="card-desc">
-            Strict PASS / REVIEW / BLOCK policies. Triggers GitHub Actions workflow failure when candidate accuracy drops below baseline tolerances.
-          </p>
-          <div class="card-footer mono">
-            <span class="pill-tag">GATE: STRICT_BLOCK</span>
-          </div>
-        </div>
-
-        <!-- Card 4 -->
-        <div class="platform-card">
-          <div class="card-icon-wrap">
-            <i class="ri-repeat-line"></i>
-          </div>
-          <h3 class="card-title">Reproducibility Verification</h3>
-          <p class="card-desc">
-            Cross-verifies model determinism across CUDA architectures, multi-GPU batching, PyTorch versions, and floating-point precision modes.
-          </p>
-          <div class="card-footer mono">
-            <span class="pill-tag">DETERMINISM: 99.8%</span>
-          </div>
-        </div>
-
-        <!-- Card 5 -->
-        <div class="platform-card">
-          <div class="card-icon-wrap">
-            <i class="ri-fingerprint-line"></i>
-          </div>
-          <h3 class="card-title">Privacy & Membership Defense</h3>
-          <p class="card-desc">
-            Audits embedding leakage and membership inference vulnerability vectors to prevent training data reconstruction.
-          </p>
-          <div class="card-footer mono">
-            <span class="pill-tag">LEAK_RISK: ZERO</span>
-          </div>
-        </div>
-
-        <!-- Card 6 -->
-        <div class="platform-card">
-          <div class="card-icon-wrap">
-            <i class="ri-dashboard-line"></i>
-          </div>
-          <h3 class="card-title">Developer Inspection Workbench</h3>
-          <p class="card-desc">
-            Comprehensive web-based workspace to visually inspect layer activations, compare baseline vs candidate outputs, and approve release gates.
-          </p>
-          <div class="card-footer mono">
-            <span class="pill-tag">WORKBENCH: LIVE</span>
-          </div>
-        </div>
-
-      </div>
-
-
-
-      <!-- Bottom Launch CTA Banner -->
-      <div class="platform-cta-banner">
-        <div class="cta-banner-content">
-          <h3 class="cta-banner-heading">Ready to secure your candidate models?</h3>
-          <p class="cta-banner-desc">
-            Open the ModelShield Workbench to inspect live model comparisons, run automated regression scans, and gate release deployments.
-          </p>
-        </div>
-        <div class="cta-banner-actions">
-          <a href="dashboard/index.html" class="btn-banner-primary">
-            <span>Open Developer Workbench</span>
+        <div class="expanded-cli-actions">
+          <a href="dashboard/index.html" class="btn-morph-primary" id="btn-go-workspace-morph">
+            <span data-i18n="nav.workspace">Go to Workspace</span>
             <i class="ri-arrow-right-line"></i>
           </a>
         </div>
@@ -405,45 +426,81 @@
             </div>
             <span class="brand-text">ModelShield</span>
           </div>
-          <p class="footer-tagline">
+          <p class="footer-tagline" data-i18n="footer.tagline">
             Security &amp; ML Regression Protection Infrastructure for Artificial Intelligence Models.
           </p>
           <div class="footer-status-pill mono">
             <span class="status-dot"></span>
-            <span>SYSTEM OPERATIONAL // V1.0.0</span>
+            <span data-i18n="footer.status">SYSTEM OPERATIONAL // V1.0.0</span>
+          </div>
+          <div class="footer-social-links">
+            <a href="https://github.com" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="social-icon-btn" title="GitHub">
+              <i class="ri-github-fill"></i>
+            </a>
+            <a href="https://x.com" target="_blank" rel="noopener noreferrer" aria-label="X" class="social-icon-btn" title="X (Twitter)">
+              <i class="ri-twitter-x-fill"></i>
+            </a>
+            <a href="https://discord.com" target="_blank" rel="noopener noreferrer" aria-label="Discord" class="social-icon-btn" title="Discord">
+              <i class="ri-discord-fill"></i>
+            </a>
+            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="social-icon-btn" title="LinkedIn">
+              <i class="ri-linkedin-box-fill"></i>
+            </a>
+            <a href="https://npmjs.com" target="_blank" rel="noopener noreferrer" aria-label="npm" class="social-icon-btn" title="npm Package">
+              <i class="ri-npmjs-fill"></i>
+            </a>
           </div>
         </div>
 
         <div class="footer-nav-group">
           <div class="footer-nav-col">
-            <h4 class="footer-nav-heading mono">PLATFORM</h4>
-            <a href="dashboard/index.html">Developer Workbench</a>
-            <a href="#storyline">Security Engine</a>
-            <a href="#platform-stack">Verification Stack</a>
-            <a href="dashboard/index.html">Regression Bank</a>
+            <h4 class="footer-nav-heading mono" data-i18n="footer.col_platform">PLATFORM</h4>
+            <a href="dashboard/index.html" data-i18n="footer.link_workbench">Developer Workbench</a>
+            <a href="pages/security-engine.html" data-i18n="footer.link_sec_engine">Security Engine</a>
+            <a href="pages/verification-stack.html" data-i18n="footer.link_verif_stack">Verification Stack</a>
+            <a href="pages/regression-bank.html" data-i18n="footer.link_regr_bank">Regression Bank</a>
           </div>
 
           <div class="footer-nav-col">
-            <h4 class="footer-nav-heading mono">SECURITY</h4>
-            <a href="#platform-stack">Adversarial Testing</a>
-            <a href="#platform-stack">Reproducibility Capsules</a>
-            <a href="#platform-stack">CI/CD Gating</a>
-            <a href="#platform-stack">Privacy Audits</a>
+            <h4 class="footer-nav-heading mono" data-i18n="footer.col_security">SECURITY</h4>
+            <a href="pages/adversarial-testing.html" data-i18n="footer.link_adv_testing">Adversarial Testing</a>
+            <a href="pages/reproducibility-capsules.html" data-i18n="footer.link_repro_capsules">Reproducibility Capsules</a>
+            <a href="pages/cicd-gating.html" data-i18n="footer.link_cicd">CI/CD Gating</a>
+            <a href="pages/privacy-audits.html" data-i18n="footer.link_privacy_audits">Privacy Audits</a>
           </div>
 
           <div class="footer-nav-col">
-            <h4 class="footer-nav-heading mono">RESOURCES</h4>
-            <a href="https://github.com" target="_blank" rel="noopener noreferrer">GitHub Repository</a>
-            <a href="#platform-stack">Documentation</a>
-            <a href="#hero-section">API Reference</a>
-            <a href="dashboard/index.html">Release Notes</a>
+            <h4 class="footer-nav-heading mono" data-i18n="footer.col_resources">RESOURCES</h4>
+            <a href="pages/docs.html" data-i18n="footer.link_docs">Documentation</a>
+            <a href="pages/api-reference.html" data-i18n="footer.link_api">API Reference</a>
+            <a href="pages/release-notes.html" data-i18n="footer.link_releases">Release Notes</a>
+            <a href="pages/status.html" data-i18n="footer.link_status">System Status</a>
+          </div>
+
+          <div class="footer-nav-col">
+            <h4 class="footer-nav-heading mono" data-i18n="footer.col_company">COMPANY</h4>
+            <a href="pages/about.html" data-i18n="footer.link_about">About ModelShield</a>
+            <a href="pages/terms.html" data-i18n="footer.link_terms">Terms of Service</a>
+            <a href="pages/privacy.html" data-i18n="footer.link_privacy">Privacy Policy</a>
+            <a href="pages/security-engine.html" data-i18n="footer.link_advisories">Security Advisories</a>
           </div>
         </div>
       </div>
 
       <div class="footer-bottom">
         <div class="footer-copy">
-          <span>&copy; 2026 ModelShield Engineering. All rights reserved.</span>
+          <span data-i18n="footer.copyright">&copy; 2026 ModelShield Engineering. All rights reserved.</span>
+        </div>
+        <div class="footer-lang-picker">
+          <i class="ri-global-line"></i>
+          <select class="lang-selector-select" aria-label="Language Selector">
+            <option value="en">English (US)</option>
+            <option value="es">Español</option>
+            <option value="fr">Français</option>
+            <option value="de">Deutsch</option>
+            <option value="ja">日本語</option>
+            <option value="zh">中文</option>
+          </select>
         </div>
         <div class="footer-tech-specs mono">
           <span>PyTorch 2.2</span> • <span>CUDA 12.1</span> • <span>Schema v1.0</span>
